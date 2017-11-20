@@ -5,6 +5,24 @@ import math
 import numpy as np
 import cv2
 
+class HoughParams:
+    def __init__(self, dp=1.2, minDist=40, canny=80, accum=80, minRadius=20, maxRadius=80):
+        self.dp        = dp
+        self.minDist   = minDist
+        self.canny     = canny
+        self.accum     = accum
+        self.minRadius = minRadius
+        self.maxRadius = maxRadius
+    def runHough(self, image):
+        output = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT,
+                                  self.dp,
+                                  self.minDist,
+                                  param1=self.canny,
+                                  param2=self.accum,
+                                  minRadius=self.minRadius,
+                                  maxRadius=self.maxRadius)
+        return output
+
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
 def calculateDispersion(circles, pixelDist, realDist):
     n = 0
@@ -54,10 +72,6 @@ def preprocess(image):
     
     return output
 
-# 
-def iterate(circles):
-    return 0
-
 def main():
     image_path = "target0.jpg"
     if len(sys.argv) > 1:
@@ -83,16 +97,10 @@ def main():
     cv2.imshow('preprocess', proc)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-    dp = 1.2
-    minDist = 40
-    param1 = 70 * 4/8
-    param2 = 70 * 6/8
-    minRadius = 20
-    maxRadius = 80
-
-    circles = cv2.HoughCircles(proc,cv2.HOUGH_GRADIENT,dp,minDist,
-                               param1=param1,param2=param2,
-                               minRadius=minRadius,maxRadius=maxRadius)
+    hough = HoughParams()
+    hough.canny *= 4/8
+    hough.accum *= 6/8
+    circles = hough.runHough(proc)
 
     circles = np.uint16(np.around(circles))
     meanX = 0
