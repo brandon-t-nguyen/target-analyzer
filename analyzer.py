@@ -5,39 +5,8 @@ import math
 import numpy as np
 import cv2
 
-class Hole:
-    def __init__(self, x=-1, y=-1, r=-1):
-        self.x = x
-        self.y = y
-        self.r = r
-
-class HoughParams:
-    def __init__(self, dp=1.2, minDist=40, canny=80, accum=80, minRadius=20, maxRadius=80):
-        self.dp        = dp
-        self.minDist   = minDist
-        self.canny     = canny
-        self.accum     = accum
-        self.minRadius = minRadius
-        self.maxRadius = maxRadius
-    def runHough(self, image):
-        circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT,
-                                   self.dp,
-                                   self.minDist,
-                                   param1=self.canny,
-                                   param2=self.accum,
-                                   minRadius=self.minRadius,
-                                   maxRadius=self.maxRadius)
-        circles = np.uint16(np.around(circles))
-        output = []
-        for i in circles[0,:]:
-            hole = Hole(i[0], i[1], i[2])
-            output.append(hole)
-        return output
-    def runCanny(self, image):
-        # use the canny call in hough.cpp
-        # cvCanny( img, edges, MAX(canny_threshold/2,1), canny_threshold, 3 );
-        edges = cv2.Canny(image, max(self.canny/2, 1), self.canny, 3)
-        return edges
+from hole import Hole
+from hough import Hough
 
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
 def calculateDispersion(circles, pixelDist, realDist):
@@ -115,7 +84,7 @@ def main():
     cv2.imshow('preprocess', proc)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-    hough = HoughParams()
+    hough = Hough()
     hough.dp     = 1.25
     hough.canny *= 4/8
     hough.accum *= 6/8
