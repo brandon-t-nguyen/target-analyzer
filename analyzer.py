@@ -44,6 +44,20 @@ def mouseCallback(event, x, y, flags, param):
             realDistance = float(input("Input real distance (in):: "))
             calculateDispersion(circles, distance, realDistance)
 
+# returns processed image
+def preprocess(image):
+    output = image;
+    
+    output = cv2.GaussianBlur(output, (25, 25), 10, 10)
+    output = cv2.medianBlur(output, 25)
+    output = cv2.bilateralFilter(output, 25, 10, 5)
+    
+    return output
+
+# 
+def iterate(circles):
+    return 0
+
 def main():
     image_path = "target0.jpg"
     if len(sys.argv) > 1:
@@ -64,23 +78,19 @@ def main():
     img = cv2.imread(image_path, 0)
 
     # preprocessing
-    pproc = img
-    #pproc = cv2.blur(pproc,(15, 15))
-    pproc = cv2.GaussianBlur(pproc, (35, 35), 1.25, 1.25)
-    pproc = cv2.medianBlur(pproc, 15)
-    pproc = cv2.bilateralFilter(pproc, 35, 0.35, 0.35)
+    proc = preprocess(img)
 
-    cv2.imshow('preprocess', pproc)
+    cv2.imshow('preprocess', proc)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
     dp = 1.2
     minDist = 40
-    param1 = 70
-    param2 = 70 * 5/8
+    param1 = 70 * 4/8
+    param2 = 70 * 6/8
     minRadius = 20
     maxRadius = 80
 
-    circles = cv2.HoughCircles(pproc,cv2.HOUGH_GRADIENT,dp,minDist,
+    circles = cv2.HoughCircles(proc,cv2.HOUGH_GRADIENT,dp,minDist,
                                param1=param1,param2=param2,
                                minRadius=minRadius,maxRadius=maxRadius)
 
@@ -104,7 +114,7 @@ def main():
         meanX = np.uint16(meanX/n)
         meanY = np.uint16(meanY/n)
         cv2.circle(cimg,(meanX,meanY),100,(255,0,255),-2)
-        print('lol: (%d, %d)' %(meanX, meanY))
+        print('Mean: (%d, %d)' %(meanX, meanY))
         cv2.imshow('output',cimg)
 
     cv2.waitKey(0)
