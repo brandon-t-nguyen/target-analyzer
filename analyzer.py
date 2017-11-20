@@ -5,6 +5,12 @@ import math
 import numpy as np
 import cv2
 
+class Hole:
+    def __init__(self, x=-1, y=-1, r=-1):
+        self.x = x
+        self.y = y
+        self.r = r
+
 class HoughParams:
     def __init__(self, dp=1.2, minDist=40, canny=80, accum=80, minRadius=20, maxRadius=80):
         self.dp        = dp
@@ -14,13 +20,18 @@ class HoughParams:
         self.minRadius = minRadius
         self.maxRadius = maxRadius
     def runHough(self, image):
-        output = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT,
-                                  self.dp,
-                                  self.minDist,
-                                  param1=self.canny,
-                                  param2=self.accum,
-                                  minRadius=self.minRadius,
-                                  maxRadius=self.maxRadius)
+        circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT,
+                                   self.dp,
+                                   self.minDist,
+                                   param1=self.canny,
+                                   param2=self.accum,
+                                   minRadius=self.minRadius,
+                                   maxRadius=self.maxRadius)
+        circles = np.uint16(np.around(circles))
+        output = []
+        for i in circles[0,:]:
+            hole = Hole(i[0], i[1], i[2])
+            output.append(hole)
         return output
 
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
@@ -66,9 +77,10 @@ def mouseCallback(event, x, y, flags, param):
 def preprocess(image):
     output = image;
     
+    #output = cv2.blur(output, (15, 15))
     output = cv2.GaussianBlur(output, (25, 25), 10, 10)
     output = cv2.medianBlur(output, 25)
-    output = cv2.bilateralFilter(output, 25, 10, 5)
+    output = cv2.bilateralFilter(output, 25, 10, 10)
     
     return output
 
@@ -102,21 +114,22 @@ def main():
     hough.accum *= 6/8
     circles = hough.runHough(proc)
 
-    circles = np.uint16(np.around(circles))
     meanX = 0
     meanY = 0
     n = 0
-    for i in circles[0,:]:
+    for i in circles:
         n += 1
         # draw the outer circle
-        cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),-2)
+        cv2.circle(cimg,(i.x,i.y),i.r,(0,255,0),-2)
+        
         # draw the center of the circle
-        cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+        cv2.circle(cimg,(i.x,i.y),2,(0,0,255),3)
+        
         cv2.imshow('output',cimg)
         print('%d: (%d, %d)' %(n, meanX, meanY))
 
-        meanX += i[0]
-        meanY += i[1]
+        meanX += i.x
+        meanY += i.y
 
     if n > 0:
         meanX = np.uint16(meanX/n)
