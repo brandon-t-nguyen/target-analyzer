@@ -33,6 +33,11 @@ class HoughParams:
             hole = Hole(i[0], i[1], i[2])
             output.append(hole)
         return output
+    def runCanny(self, image):
+        # use the canny call in hough.cpp
+        # cvCanny( img, edges, MAX(canny_threshold/2,1), canny_threshold, 3 );
+        edges = cv2.Canny(image, max(self.canny/2, 1), self.canny, 3)
+        return edges
 
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
 def calculateDispersion(circles, pixelDist, realDist):
@@ -92,6 +97,7 @@ def main():
 
     # Create window with freedom of dimensions
     cv2.namedWindow("preprocess", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("edges", cv2.WINDOW_NORMAL)
     cv2.namedWindow("output", cv2.WINDOW_NORMAL)
     
     # Resize window to specified dimensions
@@ -110,8 +116,10 @@ def main():
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
     hough = HoughParams()
+    hough.dp     = 1.25
     hough.canny *= 4/8
     hough.accum *= 6/8
+    cv2.imshow('edges', hough.runCanny(proc))
     circles = hough.runHough(proc)
 
     meanX = 0
