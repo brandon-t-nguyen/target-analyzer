@@ -7,7 +7,7 @@ import cv2
 from hole import Hole
 
 class Hough:
-    def __init__(self, dp=1.2, minDist=40, canny=80, accum=80, minRadius=20, maxRadius=80):
+    def __init__(self, dp=1.2, minDist=40, canny=100, accum=100, minRadius=20, maxRadius=80):
         self.dp        = dp
         self.minDist   = minDist
         self.canny     = canny

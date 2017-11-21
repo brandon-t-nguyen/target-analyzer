@@ -63,11 +63,11 @@ def sharpen(image):
 def preprocess(image):
     output = image;
     
-    #output = cv2.blur(output, (15, 15))
+    output = cv2.blur(output, (15, 15))
     output = cv2.GaussianBlur(output, (25, 25), 10, 10)
     output = cv2.medianBlur(output, 25)
     output = cv2.bilateralFilter(output, 25, 10, 10)
-    #output = sharpen(output)
+    output = sharpen(output)
     
     return output
 
@@ -99,8 +99,11 @@ def main():
 
     hough = Hough()
     hough.dp     = 1.25
-    hough.canny *= 4/8
-    hough.accum *= 6/8
+    hough.minDist= 40
+    hough.minR   = 10
+    hough.maxR   = 80
+    hough.canny  = 50
+    hough.accum  = 65
     cv2.imshow('edges', hough.runCanny(proc))
     circles = hough.runHough(proc)
 
@@ -110,6 +113,7 @@ def main():
     for i in circles:
         n += 1
         # draw the outer circle
+        cv2.circle(cimg,(i.x,i.y),i.r+5,(0,0,0),-2)
         cv2.circle(cimg,(i.x,i.y),i.r,(0,255,0),-2)
         
         # draw the center of the circle
