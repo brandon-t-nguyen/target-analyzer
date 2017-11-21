@@ -22,8 +22,11 @@ class Hough:
                                    param2=self.accum,
                                    minRadius=self.minRadius,
                                    maxRadius=self.maxRadius)
-        circles = np.uint16(np.around(circles))
         output = []
+        # check if empty
+        if circles is None:
+            return output
+        circles = np.uint16(np.around(circles))
         for i in circles[0,:]:
             hole = Hole(i[0], i[1], i[2])
             output.append(hole)
