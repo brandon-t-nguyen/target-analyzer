@@ -47,6 +47,18 @@ def mouseCallback(event, x, y, flags, param):
             realDistance = float(input("Input real distance (in):: "))
             calculateDispersion(circles, distance, realDistance)
 
+def sharpen(image):
+   kernel = np.array([
+                      [1,4,6,4,1],
+                      [4,16,24,16,4],
+                      [6, 24, -476, 25, 6], 
+                      [4,16,24,16,4],
+                      [1,4,6,4,1]
+                     ])
+   kernel = np.multiply(kernel, -1/256)
+   output = cv2.filter2D(image, -1, kernel)
+   return output
+
 # returns processed image
 def preprocess(image):
     output = image;
@@ -55,6 +67,7 @@ def preprocess(image):
     output = cv2.GaussianBlur(output, (25, 25), 10, 10)
     output = cv2.medianBlur(output, 25)
     output = cv2.bilateralFilter(output, 25, 10, 10)
+    #output = sharpen(output)
     
     return output
 
