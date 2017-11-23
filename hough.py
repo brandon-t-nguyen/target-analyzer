@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import math
+import statistics
 import numpy as np
 import cv2
 
@@ -36,3 +37,19 @@ class Hough:
         # cvCanny( img, edges, MAX(canny_threshold/2,1), canny_threshold, 3 );
         edges = cv2.Canny(image, max(self.canny/2, 1), self.canny, 3)
         return edges
+
+    def houghDescent(self, image):
+        hough = self
+        #hough.minRadius = 5
+        #hough.maxRadius = 100
+
+        for i in range(0,5):
+            circles = hough.runHough(image)
+            if len(circles) == 0:
+                break
+            statRad = statistics.median(c.r for c in circles)
+            print ("Min radius: %d, Max radius: %d" %(hough.minRadius, hough.maxRadius))
+            hough.minRadius = int(round(hough.minRadius + abs(statRad - hough.minRadius) / 8))
+            hough.maxRadius = int(round(hough.maxRadius - abs(statRad - hough.maxRadius) / 8))
+
+        return hough.runHough(image)

@@ -68,7 +68,7 @@ def preprocess(image):
     output = cv2.medianBlur(output, 25)
     output = cv2.bilateralFilter(output, 25, 10, 10)
     output = sharpen(output)
-    
+
     return output
 
 def main():
@@ -98,14 +98,17 @@ def main():
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
     hough = Hough()
-    hough.dp     = 1.25
-    hough.minDist= 40
-    hough.minR   = 10
-    hough.maxR   = 80
-    hough.canny  = 50
-    hough.accum  = 65
+    hough.dp        = 1.25
+    hough.minDist   = 40
+    hough.minRadius = 10
+    hough.maxRadius = 120
+    #hough.canny     = 50
+    #hough.accum     = 65
+    hough.canny     = 25
+    hough.accum     = 80
     cv2.imshow('edges', hough.runCanny(proc))
-    circles = hough.runHough(proc)
+    #circles = hough.runHough(proc)
+    circles = hough.houghDescent(proc)
 
     meanX = 0
     meanY = 0
