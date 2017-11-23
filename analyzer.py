@@ -102,8 +102,6 @@ def main():
     hough.minDist   = 40
     hough.minRadius = 10
     hough.maxRadius = 120
-    #hough.canny     = 50
-    #hough.accum     = 65
     hough.canny     = 25
     hough.accum     = 80
     cv2.imshow('edges', hough.runCanny(proc))
@@ -128,10 +126,29 @@ def main():
         meanX += i.x
         meanY += i.y
 
+    # draw the mean as a cross
     if n > 0:
         meanX = np.uint16(meanX/n)
         meanY = np.uint16(meanY/n)
-        cv2.circle(cimg,(meanX,meanY),100,(255,0,255),-2)
+
+        thicc = 5
+        size  = 40
+        # back
+        p1 = (meanX - thicc * 2, meanY - size - thicc * 2)
+        p2 = (meanX + thicc * 2, meanY + size + thicc * 2)
+        cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
+        p1 = (meanX - size - thicc * 2, meanY - thicc * 2)
+        p2 = (meanX + size + thicc * 2, meanY + thicc * 2)
+        cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
+
+        # fore
+        p1 = (meanX - thicc * 1, meanY - size - thicc * 1)
+        p2 = (meanX + thicc * 1, meanY + size + thicc * 1)
+        cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
+        p1 = (meanX - size - thicc * 1, meanY - thicc * 1)
+        p2 = (meanX + size + thicc * 1, meanY + thicc * 1)
+        cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
+
         print('Mean: (%d, %d)' %(meanX, meanY))
         cv2.imshow('output',cimg)
 
