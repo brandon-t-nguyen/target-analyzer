@@ -11,6 +11,9 @@ from hough import Hough
 
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
 circles = []
+selected = False
+s1x, s1y, s2x, s2y = 0, 0, 0, 0
+img = []
 def calculateDispersion(circles, pixelDist, realDist):
     n = len(circles)
 
@@ -25,8 +28,23 @@ def calculateDispersion(circles, pixelDist, realDist):
         #print("Conversion: %f pixels to %f in" % (pixelDist, realDist))
         print("Mean distance: %f in" % meanRealDist)
 
+def originalCallback(event, x, y, flags, param):
+    global selecting, img, mask
+    global s1x, s1y, s2x, s2y
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print("Mouse down (%d, %d)" %(x, y))
+        s1x = x
+        s1y = y
+    elif event == cv2.EVENT_LBUTTONUP:
+        print("Mouse up (%d, %d)" %(x, y))
+        s2x = x
+        s2y = y
+        # create the mask
+        mask = np.zeros(img.shape, dtype="uint8")
+        cv2.rectangle(mask, (s1x, s1y), (s2x, s2y), (255, 255, 255), -1)
+        selected = True
 
-def mouseCallback(event, x, y, flags, param):
+def pprocCallback(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDBLCLK:
         print("Mouse: (%d, %d)" %(x, y))
         global state, p1x, p1y, p2x, p2y
@@ -74,21 +92,26 @@ def main():
 
 
     # Create window with freedom of dimensions
+    cv2.namedWindow("original", cv2.WINDOW_NORMAL)
     cv2.namedWindow("preprocess", cv2.WINDOW_NORMAL)
     cv2.namedWindow("edges", cv2.WINDOW_NORMAL)
     cv2.namedWindow("output", cv2.WINDOW_NORMAL)
 
-    # Resize window to specified dimensions
-    # cv2.resizeWindow("output", 400, 300)
-
     # MOA calculator callback
-    cv2.setMouseCallback('output',mouseCallback)
+    cv2.setMouseCallback('original', originalCallback)
+    cv2.setMouseCallback('output', pprocCallback)
 
     # Load an color image in grayscale
+    global img, mask, unselected
     img = cv2.imread(image_path, 0)
 
+    cv2.imshow('original', img)
+
+    print("Select ROI and hit any key")
+    cv2.waitKey(0)
+
     # preprocessing
-    proc = preprocess(img)
+    proc = cv2.bitwise_and(preprocess(img), mask)
 
     cv2.imshow('preprocess', proc)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
