@@ -28,7 +28,7 @@ def calculateDispersion(circles, pixelDist, realDist):
         meanRealDist = meanDist * realDist / pixelDist
         #print("Conversion: %f pixels to %f in" % (pixelDist, realDist))
         print("Mean distance: %f in" % meanRealDist)
-    
+
 
 def mouseCallback(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDBLCLK:
@@ -51,7 +51,7 @@ def sharpen(image):
    kernel = np.array([
                       [1,4,6,4,1],
                       [4,16,24,16,4],
-                      [6, 24, -476, 25, 6], 
+                      [6, 24, -476, 25, 6],
                       [4,16,24,16,4],
                       [1,4,6,4,1]
                      ])
@@ -62,7 +62,7 @@ def sharpen(image):
 # returns processed image
 def preprocess(image):
     output = image;
-    
+
     output = cv2.blur(output, (15, 15))
     output = cv2.GaussianBlur(output, (25, 25), 10, 10)
     output = cv2.medianBlur(output, 25)
@@ -81,7 +81,7 @@ def main():
     cv2.namedWindow("preprocess", cv2.WINDOW_NORMAL)
     cv2.namedWindow("edges", cv2.WINDOW_NORMAL)
     cv2.namedWindow("output", cv2.WINDOW_NORMAL)
-    
+
     # Resize window to specified dimensions
     # cv2.resizeWindow("output", 400, 300)
 
@@ -116,10 +116,10 @@ def main():
         # draw the outer circle
         cv2.circle(cimg,(i.x,i.y),i.r+5,(0,0,0),-2)
         cv2.circle(cimg,(i.x,i.y),i.r,(0,255,0),-2)
-        
+
         # draw the center of the circle
         cv2.circle(cimg,(i.x,i.y),2,(0,0,255),3)
-        
+
         cv2.imshow('output',cimg)
         print('%d: (%d, %d)' %(n, meanX, meanY))
 
