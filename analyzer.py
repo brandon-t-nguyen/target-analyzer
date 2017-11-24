@@ -2,6 +2,7 @@
 
 import sys
 import math
+import statistics
 import numpy as np
 import cv2
 
@@ -9,21 +10,16 @@ from hole import Hole
 from hough import Hough
 
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
+circles = []
 def calculateDispersion(circles, pixelDist, realDist):
-    n = 0
-    meanX = 0
-    meanY = 0
-    for i in circles[0,:]:
-        n += 1
-        meanX += i[0]
-        meanY += i[1]
+    n = len(circles)
 
     if n > 0:
-        meanX = (meanX/n)
-        meanY = (meanY/n)
+        meanX = statistics.mean(c.x for c in circles)
+        meanY = statistics.mean(c.y for c in circles)
         meanDist = 0
-        for i in circles[0,:]:
-            meanDist += math.sqrt(math.pow(i[0] - meanX, 2) + math.pow(i[1] - meanY, 2))
+        for i in circles:
+            meanDist += math.sqrt(math.pow(float(i.x) - meanX, 2) + math.pow(float(i.y) - meanY, 2))
         meanDist /= n
         meanRealDist = meanDist * realDist / pixelDist
         #print("Conversion: %f pixels to %f in" % (pixelDist, realDist))
@@ -105,6 +101,7 @@ def main():
     hough.canny     = 25
     hough.accum     = 80
     cv2.imshow('edges', hough.runCanny(proc))
+    global circles
     #circles = hough.runHough(proc)
     circles = hough.houghDescent(proc)
 
@@ -121,7 +118,7 @@ def main():
         cv2.circle(cimg,(i.x,i.y),2,(0,0,255),3)
 
         cv2.imshow('output',cimg)
-        print('%d: (%d, %d)' %(n, meanX, meanY))
+        print('%d: (%d, %d)' %(n, i.x, i.y))
 
         meanX += i.x
         meanY += i.y
