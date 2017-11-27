@@ -7,6 +7,12 @@ import cv2
 
 from hole import Hole
 
+def filterCircle(c, perfect):
+    for p in perfect:
+        if c.distance(p) < abs(float(c.r) - float(p.r)):
+            return False
+    return True
+
 class Hough:
     def __init__(self, dp=1.2, minDist=40, canny=100, accum=100, minRadius=20, maxRadius=80):
         self.dp        = dp
@@ -52,4 +58,20 @@ class Hough:
             hough.minRadius = int(round(hough.minRadius + abs(statRad - hough.minRadius) / 8))
             hough.maxRadius = int(round(hough.maxRadius - abs(statRad - hough.maxRadius) / 8))
 
-        return hough.runHough(image)
+        cirlces = hough.runHough(image)
+        old_acc = hough.accum
+        # get large accumulator circles and remove them
+        hough.accum = old_acc * 2.0
+        perfect = hough.runHough(image)
+
+        for p in perfect:
+            print("Perfect circle: (%d, %d)" %(p.x, p.y))
+
+        for c in circles:
+            if not filterCircle(c, perfect):
+                print("Removing perfect circle: (%d, %d)" %(c.x, c.y))
+
+        circles[:] = [c for c in circles if filterCircle(c, perfect)]
+
+        hough.accum = old_acc
+        return circles

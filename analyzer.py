@@ -77,7 +77,13 @@ def sharpen(image):
 def preprocess(image):
     output = image;
 
-    output = cv2.blur(output, (15, 15))
+    #output = cv2.blur(output, (15, 15))
+    #output = cv2.GaussianBlur(output, (25, 25), 10, 10)
+    #output = cv2.medianBlur(output, 25)
+    #output = cv2.bilateralFilter(output, 25, 10, 10)
+    #output = sharpen(output)
+
+    output = cv2.blur(output, (25, 25))
     output = cv2.GaussianBlur(output, (25, 25), 10, 10)
     output = cv2.medianBlur(output, 25)
     output = cv2.bilateralFilter(output, 25, 10, 10)
