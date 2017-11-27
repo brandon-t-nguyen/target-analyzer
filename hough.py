@@ -54,7 +54,7 @@ class Hough:
             if len(circles) == 0:
                 break
             statRad = statistics.median(c.r for c in circles)
-            print ("Min radius: %d, Max radius: %d" %(hough.minRadius, hough.maxRadius))
+            print ("Min rad: %d, Mid rad: %d, Max rad: %d" %(hough.minRadius, statRad, hough.maxRadius))
             hough.minRadius = int(round(hough.minRadius + abs(statRad - hough.minRadius) / 8))
             hough.maxRadius = int(round(hough.maxRadius - abs(statRad - hough.maxRadius) / 8))
 
