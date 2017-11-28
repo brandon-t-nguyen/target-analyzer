@@ -74,8 +74,9 @@ def sharpen(image):
    return output
 
 # returns processed image
-def preprocess(image):
-    output = image;
+def preprocess(image, w, h):
+    output = image
+    output = cv2.equalizeHist(image)
 
     #output = cv2.blur(output, (15, 15))
     #output = cv2.GaussianBlur(output, (25, 25), 10, 10)
@@ -83,10 +84,24 @@ def preprocess(image):
     #output = cv2.bilateralFilter(output, 25, 10, 10)
     #output = sharpen(output)
 
-    output = cv2.blur(output, (25, 25))
-    output = cv2.GaussianBlur(output, (25, 25), 10, 10)
-    output = cv2.medianBlur(output, 25)
-    output = cv2.bilateralFilter(output, 25, 10, 10)
+    win_w = int(w / 100)
+    win_h = int(h / 100)
+    if (win_w % 2) == 0:
+        win_w += 1
+    if (win_h % 2) == 0:
+        win_h += 1
+    print("ROI width: %d, ROI height: %d" %(w, h))
+    print("Window width: %d, window height: %d" %(win_w, win_h))
+    #output = cv2.blur(output, (win_w, win_h))
+    #output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 4), int(win_w / 4))
+    #output = cv2.medianBlur(output, win_w)
+    #output = cv2.bilateralFilter(output, win_w, int(win_w / 4), int(win_w / 4))
+    #output = sharpen(output)
+    #output = sharpen(output)
+
+    output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
+    output = cv2.medianBlur(output, win_w)
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
     output = sharpen(output)
 
     return output
@@ -117,7 +132,10 @@ def main():
     cv2.waitKey(0)
 
     # preprocessing
-    proc = cv2.bitwise_and(preprocess(img), mask)
+    global s1x, s1y, s2x, s2y
+    roi_w = abs(s1x - s2x)
+    roi_h = abs(s1y - s2y)
+    proc = cv2.bitwise_and(preprocess(img, roi_w, roi_h), mask)
 
     cv2.imshow('preprocess', proc)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -127,7 +145,8 @@ def main():
     hough.minDist   = 40
     hough.minRadius = 10
     hough.maxRadius = 120
-    hough.canny     = 25
+    #hough.canny     = 25
+    hough.canny     = 20
     hough.accum     = 80
     cv2.imshow('edges', hough.runCanny(proc))
     global circles
