@@ -74,9 +74,8 @@ def sharpen(image):
    return output
 
 # returns processed image
-def preprocess(image, w, h):
-    output = image
-    output = cv2.equalizeHist(image)
+def preprocess(image, w, h, s1x, s1y, s2x, s2y):
+    output = image[s1y:s2y, s1x:s2x]
 
     #output = cv2.blur(output, (15, 15))
     #output = cv2.GaussianBlur(output, (25, 25), 10, 10)
@@ -104,7 +103,10 @@ def preprocess(image, w, h):
     output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
     output = sharpen(output)
 
-    return output
+    whole = np.copy(image)
+    whole[s1y:s2y, s1x:s2x] = output
+
+    return whole
 
 def main():
     image_path = "target0.jpg"
@@ -135,7 +137,7 @@ def main():
     global s1x, s1y, s2x, s2y
     roi_w = abs(s1x - s2x)
     roi_h = abs(s1y - s2y)
-    proc = cv2.bitwise_and(preprocess(img, roi_w, roi_h), mask)
+    proc = cv2.bitwise_and(preprocess(img, roi_w, roi_h, s1x, s1y, s2x, s2y), mask)
 
     cv2.imshow('preprocess', proc)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
