@@ -46,11 +46,18 @@ class Hough:
 
     def houghDescent(self, image):
         hough = self
+        orig_acc = hough.accum
         #hough.minRadius = 5
         #hough.maxRadius = 100
 
         for i in range(0,5):
             circles = hough.runHough(image)
+            # heuristic: who even shoots two shot groups?
+            while len(circles) < 3 and hough.accum > 10:
+                d_acc = max(int(hough.accum / 10), 1)
+                print ("Reducing the accumulator from %d to %d" %(hough.accum, hough.accum - d_acc))
+                hough.accum -= d_acc
+                circles = hough.runHough(image)
             if len(circles) == 0:
                 break
             statRad = statistics.median(c.r for c in circles)
@@ -59,8 +66,8 @@ class Hough:
             hough.maxRadius = int(round(hough.maxRadius - abs(statRad - hough.maxRadius) / 8))
 
         cirlces = hough.runHough(image)
-        old_acc = hough.accum
         # get large accumulator circles and remove them
+        old_acc = hough.accum
         hough.accum = old_acc * 2.0
         perfect = hough.runHough(image)
 
@@ -73,5 +80,5 @@ class Hough:
 
         circles[:] = [c for c in circles if filterCircle(c, perfect)]
 
-        hough.accum = old_acc
+        hough.accum = orig_acc
         return circles
