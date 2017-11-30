@@ -140,6 +140,28 @@ def morph_preprocess(image, w, h, s1x, s1y, s2x, s2y):
     #output = m_close(output, k_radial, 10)
     return output
 
+def filter_preprocess2(image, w, h, s1x, s1y, s2x, s2y):
+    win_w = int(w / 100)
+    win_h = int(h / 100)
+    if (win_w % 2) == 0:
+        win_w += 1
+    if (win_h % 2) == 0:
+        win_h += 1
+    print("ROI width: %d, ROI height: %d" %(w, h))
+    print("Window width: %d, window height: %d" %(win_w, win_h))
+
+    output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    output = cv2.equalizeHist(output)
+    output = cv2.medianBlur(output, win_w)
+    output = cv2.blur(output, (win_w, win_h))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    return output
+
 def filter_preprocess(image, w, h, s1x, s1y, s2x, s2y):
     output = image
 
