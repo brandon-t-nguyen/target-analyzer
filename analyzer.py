@@ -12,7 +12,8 @@ from hough import Hough
 state, p1x, p1y, p2x, p2y, distance = 0,0,0,0,0,0
 circles = []
 selected = False
-s1x, s1y, s2x, s2y = 0, 0, 0, 0
+s0 = [0, 0]
+s1 = [0, 0]
 img = []
 def calculateDispersion(circles, pixelDist, realDist):
     n = len(circles)
@@ -29,19 +30,18 @@ def calculateDispersion(circles, pixelDist, realDist):
         print("Mean distance: %f in" % meanRealDist)
 
 def originalCallback(event, x, y, flags, param):
-    global selecting, img, mask
+    global selecting
     global s1x, s1y, s2x, s2y
     if event == cv2.EVENT_LBUTTONDOWN:
         print("Mouse down (%d, %d)" %(x, y))
-        s1x = x
-        s1y = y
+        s0[0] = x
+        s0[1] = y
     elif event == cv2.EVENT_LBUTTONUP:
         print("Mouse up (%d, %d)" %(x, y))
-        s2x = x
-        s2y = y
+        s1[0] = x
+        s1[1] = y
         # create the mask
         mask = np.zeros(img.shape, dtype="uint8")
-        cv2.rectangle(mask, (s1x, s1y), (s2x, s2y), (255, 255, 255), -1)
         selected = True
 
 def pprocCallback(event, x, y, flags, param):
@@ -94,102 +94,65 @@ def m_close(image, kernel, iterations = 1):
 def m_open(image, kernel, iterations = 1):
     return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations = iterations)
 
-def morph_preprocess(image, w, h, s1x, s1y, s2x, s2y):
+def morph_preprocess(image):
     output = image
-    win_w = max(int(w / 150), 11)
-    win_h = max(int(w / 150), 11)
-    if (win_w % 2) == 0:
-        win_w += 1
-    if (win_h % 2) == 0:
-        win_h += 1
-    output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+    output = cv2.GaussianBlur(output, (3, 3), 1, 1)
+    output = cv2.bilateralFilter(output, 3, 1, 1)
 
     # 11
-    output = cv2.adaptiveThreshold(output,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,win_w,2)
+    output = cv2.adaptiveThreshold(output,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 3, 2)
 
     n = 1
-    k_rect = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
+    k_rect = cv2.getStructuringElement(cv2.MORPH_RECT,(2,2))
     output = m_close(output, k_rect, n)
-    output = m_close(output, k_rect, n)
-
-    #n = 1
-    #k_rect4 = cv2.getStructuringElement(cv2.MORPH_RECT,(4,4))
-    #k_circle3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
-    #k_cross4 = cv2.getStructuringElement(cv2.MORPH_CROSS,(4,4))
-    #k_cross2 = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
-    #k_radial = np.array([
-    #                      [  1,  0,  0,  0,  1],
-    #                      [  0,  1,  0,  1,  0],
-    #                      [  0,  0,  1,  0,  0],
-    #                      [  0,  1,  0,  1,  0],
-    #                      [  1,  0,  0,  0,  1]
-    #                 ], dtype=np.uint8)
-
-    #output = m_close(output, k_circle3, n)
-    #output = m_close(output, k_radial, n)
-    #output = m_black(output, k_cross2, n)
-    #output = m_top(output, k_cross2, n)
-    #output = m_top(output, k_cross2, n)
-    #output = m_close(output, k_radial, n)
-
-    #output = m_close(output, k_radial, 10)
-    #output = m_close(output, k_radial, 10)
-    #output = m_erode(output, k_radial, 10)
-    #output = m_close(output, k_radial, 10)
-    #output = m_close(output, k_radial, 10)
     return output
 
-def filter_preprocess2(image, w, h, s1x, s1y, s2x, s2y):
-    win_w = int(w / 100)
-    win_h = int(h / 100)
-    if (win_w % 2) == 0:
-        win_w += 1
-    if (win_h % 2) == 0:
-        win_h += 1
-    print("ROI width: %d, ROI height: %d" %(w, h))
-    print("Window width: %d, window height: %d" %(win_w, win_h))
-
-    output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    output = cv2.equalizeHist(output)
-    output = cv2.medianBlur(output, win_w)
-    output = cv2.blur(output, (win_w, win_h))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    return output
-
-def filter_preprocess(image, w, h, s1x, s1y, s2x, s2y):
+def filter_preprocess(image):
     output = image
-
-    win_w = int(w / 100)
-    win_h = int(h / 100)
-    if (win_w % 2) == 0:
-        win_w += 1
-    if (win_h % 2) == 0:
-        win_h += 1
-    print("ROI width: %d, ROI height: %d" %(w, h))
-    print("Window width: %d, window height: %d" %(win_w, win_h))
-    output = cv2.blur(output, (win_w, win_h))
-    output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
-    output = cv2.medianBlur(output, win_w)
-    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-
+    output = cv2.blur(output, (3, 3))
+    output = cv2.GaussianBlur(output, (3, 3), 1, 1)
+    output = cv2.medianBlur(output, 3)
+    output = cv2.bilateralFilter(output, 3, 1, 3)
     return output
 
 # returns processed image
-def preprocess(image, w, h, s1x, s1y, s2x, s2y):
-    output = image[s1y:s2y, s1x:s2x]
+def preprocess(image):
+    output = filter_preprocess(image)
+    #output = morph_preprocess(image)
+    return output
 
-    output = filter_preprocess(output, w, h, s1x, s1y, s2x, s2y)
+# returns a part of the image from the ROI corner coordinates
+# return offset and transformation coordinates
+def normalize_selection(image, s0, s1):
+    SIZE = [256, 256] # w, h
+    output = image[s0[1]:s1[1], s0[0]:s1[0]]
 
-    whole = np.copy(image)
-    whole[s1y:s2y, s1x:s2x] = output
+    fix_size = np.array(SIZE, dtype=np.float)
+    roi_size = np.array([s1[0] - s0[0], s1[1] - s0[1]], dtype=np.float)
 
-    return whole
+    # scale to a fixed size
+    if np.prod(roi_size) > np.prod(fix_size):
+        output = cv2.resize(output, (int(SIZE[0]), int(SIZE[1])), interpolation = cv2.INTER_AREA);
+    else:
+        output = cv2.resize(output, (int(SIZE[0]), int(SIZE[1])), interpolation = cv2.INTER_CUBIC);
+
+    scale = fix_size / roi_size
+    offset = s0
+
+    print("Scale:")
+    print(scale)
+    print("Offset")
+    print(offset)
+
+    return output, scale, offset
+
+# uses the scale and offset returns from normalize_selection
+# to return circles in original coords
+def transform_circles(circles, scale, offset):
+    for c in circles:
+        c.x = int(round(float(c.x) / scale[0] + offset[0]))
+        c.y = int(round(float(c.y) / scale[1] + offset[1]))
+        c.r = int(round(float(c.r) / ((scale[0]+scale[1])/2)))
 
 def main():
     image_path = "target0.jpg"
@@ -217,24 +180,25 @@ def main():
     cv2.waitKey(0)
 
     # preprocessing
-    global s1x, s1y, s2x, s2y
-    roi_w = abs(s1x - s2x)
-    roi_h = abs(s1y - s2y)
-    proc = cv2.bitwise_and(preprocess(img, roi_w, roi_h, s1x, s1y, s2x, s2y), mask)
+    global s0, s1
+    sel, scale, offset = normalize_selection(img, s0, s1);
+    proc = preprocess(sel)
 
     cv2.imshow('preprocess', proc)
+    cv2.waitKey(0)
     cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
     hough = Hough()
     hough.dp        = 1.25
-    hough.minDist   = 40
-    hough.minRadius = 10
-    hough.maxRadius = 120
-    hough.canny     = 20
-    hough.accum     = 60
+    hough.minDist   = 10
+    hough.minRadius = 2
+    hough.maxRadius = 10
+    hough.canny     = 15
+    hough.accum     = 15
     cv2.imshow('edges', hough.runCanny(proc))
     global circles
     circles = hough.houghDescent(proc)
+    transform_circles(circles, scale, offset)
 
     meanX = 0
     meanY = 0
