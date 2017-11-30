@@ -73,15 +73,75 @@ def sharpen(image):
    output = cv2.filter2D(image, -1, kernel)
    return output
 
-# returns processed image
-def preprocess(image, w, h, s1x, s1y, s2x, s2y):
-    output = image[s1y:s2y, s1x:s2x]
+def m_erode(image, kernel, iterations = 1):
+    return cv2.erode(image, kernel, iterations = iterations, borderType = cv2.BORDER_CONSTANT, borderValue = 0)
 
-    #output = cv2.blur(output, (15, 15))
-    #output = cv2.GaussianBlur(output, (25, 25), 10, 10)
-    #output = cv2.medianBlur(output, 25)
-    #output = cv2.bilateralFilter(output, 25, 10, 10)
-    #output = sharpen(output)
+def m_dilate(image, kernel, iterations = 1):
+    return cv2.dilate(image, kernel, iterations = iterations, borderType = cv2.BORDER_CONSTANT, borderValue = 0)
+
+def m_hitmiss(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel, iterations = iterations)
+
+def m_top(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_TOPHAT, kernel, iterations = iterations)
+
+def m_black(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, kernel, iterations = iterations)
+
+def m_close(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel, iterations = iterations)
+
+def m_open(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations = iterations)
+
+def morph_preprocess(image, w, h, s1x, s1y, s2x, s2y):
+    output = image
+    win_w = max(int(w / 150), 11)
+    win_h = max(int(w / 150), 11)
+    if (win_w % 2) == 0:
+        win_w += 1
+    if (win_h % 2) == 0:
+        win_h += 1
+    output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
+    output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
+
+    # 11
+    output = cv2.adaptiveThreshold(output,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,win_w,2)
+
+    n = 1
+    k_rect = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
+    output = m_close(output, k_rect, n)
+    output = m_close(output, k_rect, n)
+
+    #n = 1
+    #k_rect4 = cv2.getStructuringElement(cv2.MORPH_RECT,(4,4))
+    #k_circle3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
+    #k_cross4 = cv2.getStructuringElement(cv2.MORPH_CROSS,(4,4))
+    #k_cross2 = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
+    #k_radial = np.array([
+    #                      [  1,  0,  0,  0,  1],
+    #                      [  0,  1,  0,  1,  0],
+    #                      [  0,  0,  1,  0,  0],
+    #                      [  0,  1,  0,  1,  0],
+    #                      [  1,  0,  0,  0,  1]
+    #                 ], dtype=np.uint8)
+
+    #output = m_close(output, k_circle3, n)
+    #output = m_close(output, k_radial, n)
+    #output = m_black(output, k_cross2, n)
+    #output = m_top(output, k_cross2, n)
+    #output = m_top(output, k_cross2, n)
+    #output = m_close(output, k_radial, n)
+
+    #output = m_close(output, k_radial, 10)
+    #output = m_close(output, k_radial, 10)
+    #output = m_erode(output, k_radial, 10)
+    #output = m_close(output, k_radial, 10)
+    #output = m_close(output, k_radial, 10)
+    return output
+
+def filter_preprocess(image, w, h, s1x, s1y, s2x, s2y):
+    output = image
 
     win_w = int(w / 100)
     win_h = int(h / 100)
@@ -91,17 +151,18 @@ def preprocess(image, w, h, s1x, s1y, s2x, s2y):
         win_h += 1
     print("ROI width: %d, ROI height: %d" %(w, h))
     print("Window width: %d, window height: %d" %(win_w, win_h))
-    #output = cv2.blur(output, (win_w, win_h))
-    #output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 4), int(win_w / 4))
-    #output = cv2.medianBlur(output, win_w)
-    #output = cv2.bilateralFilter(output, win_w, int(win_w / 4), int(win_w / 4))
-    #output = sharpen(output)
-    #output = sharpen(output)
-
+    output = cv2.blur(output, (win_w, win_h))
     output = cv2.GaussianBlur(output, (win_w, win_h), int(win_w / 2), int(win_w / 2))
     output = cv2.medianBlur(output, win_w)
     output = cv2.bilateralFilter(output, win_w, int(win_w / 2), int(win_w / 2))
-    output = sharpen(output)
+
+    return output
+
+# returns processed image
+def preprocess(image, w, h, s1x, s1y, s2x, s2y):
+    output = image[s1y:s2y, s1x:s2x]
+
+    output = filter_preprocess(output, w, h, s1x, s1y, s2x, s2y)
 
     whole = np.copy(image)
     whole[s1y:s2y, s1x:s2x] = output
@@ -147,12 +208,10 @@ def main():
     hough.minDist   = 40
     hough.minRadius = 10
     hough.maxRadius = 120
-    #hough.canny     = 25
     hough.canny     = 20
-    hough.accum     = 80
+    hough.accum     = 60
     cv2.imshow('edges', hough.runCanny(proc))
     global circles
-    #circles = hough.runHough(proc)
     circles = hough.houghDescent(proc)
 
     meanX = 0
