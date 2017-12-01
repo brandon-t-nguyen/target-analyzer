@@ -109,9 +109,9 @@ def morph_preprocess(image):
 
 def filter_preprocess(image):
     output = image
-    output = cv2.blur(output, (3, 3))
+    #output = cv2.blur(output, (3, 3))
     output = cv2.GaussianBlur(output, (3, 3), 1, 1)
-    output = cv2.medianBlur(output, 3)
+    #output = cv2.medianBlur(output, 3)
     output = cv2.bilateralFilter(output, 3, 1, 3)
     return output
 
@@ -193,8 +193,8 @@ def main():
     hough.minDist   = 10
     hough.minRadius = 2
     hough.maxRadius = 10
-    hough.canny     = 15
-    hough.accum     = 15
+    hough.canny     = 70
+    hough.accum     = 20
     cv2.imshow('edges', hough.runCanny(proc))
     global circles
     circles = hough.houghDescent(proc)

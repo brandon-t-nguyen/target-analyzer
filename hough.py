@@ -68,7 +68,7 @@ class Hough:
         cirlces = hough.runHough(image)
         # get large accumulator circles and remove them
         old_acc = hough.accum
-        hough.accum = old_acc * 2.0
+        hough.accum = old_acc * 1.5
         perfect = hough.runHough(image)
 
         for p in perfect:
