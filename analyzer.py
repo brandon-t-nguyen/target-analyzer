@@ -154,6 +154,50 @@ def transform_circles(circles, scale, offset):
         c.y = int(round(float(c.y) / scale[1] + offset[1]))
         c.r = int(round(float(c.r) / ((scale[0]+scale[1])/2)))
 
+def draw_circles(circles, cimg):
+    meanX = 0
+    meanY = 0
+    n = 0
+    for i in circles:
+        n += 1
+        # draw the outer circle
+        cv2.circle(cimg,(i.x,i.y),i.r+5,(0,0,0),-2)
+        cv2.circle(cimg,(i.x,i.y),i.r,(0,255,0),-2)
+
+        # draw the center of the circle
+        cv2.circle(cimg,(i.x,i.y),2,(0,0,255),3)
+
+        cv2.imshow('output',cimg)
+        print('%d: (%d, %d)' %(n, i.x, i.y))
+
+        meanX += i.x
+        meanY += i.y
+
+    # draw the mean as a cross
+    if n > 0:
+        meanX = np.uint16(meanX/n)
+        meanY = np.uint16(meanY/n)
+
+        thicc = 5
+        size  = 40
+        # back
+        p1 = (meanX - thicc * 2, meanY - size - thicc * 2)
+        p2 = (meanX + thicc * 2, meanY + size + thicc * 2)
+        cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
+        p1 = (meanX - size - thicc * 2, meanY - thicc * 2)
+        p2 = (meanX + size + thicc * 2, meanY + thicc * 2)
+        cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
+
+        # fore
+        p1 = (meanX - thicc * 1, meanY - size - thicc * 1)
+        p2 = (meanX + thicc * 1, meanY + size + thicc * 1)
+        cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
+        p1 = (meanX - size - thicc * 1, meanY - thicc * 1)
+        p2 = (meanX + size + thicc * 1, meanY + thicc * 1)
+        cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
+
+        print('Mean: (%d, %d)' %(meanX, meanY))
+
 def main():
     image_path = "target0.jpg"
     if len(sys.argv) > 1:
@@ -199,50 +243,8 @@ def main():
     global circles
     circles = hough.houghDescent(proc)
     transform_circles(circles, scale, offset)
-
-    meanX = 0
-    meanY = 0
-    n = 0
-    for i in circles:
-        n += 1
-        # draw the outer circle
-        cv2.circle(cimg,(i.x,i.y),i.r+5,(0,0,0),-2)
-        cv2.circle(cimg,(i.x,i.y),i.r,(0,255,0),-2)
-
-        # draw the center of the circle
-        cv2.circle(cimg,(i.x,i.y),2,(0,0,255),3)
-
-        cv2.imshow('output',cimg)
-        print('%d: (%d, %d)' %(n, i.x, i.y))
-
-        meanX += i.x
-        meanY += i.y
-
-    # draw the mean as a cross
-    if n > 0:
-        meanX = np.uint16(meanX/n)
-        meanY = np.uint16(meanY/n)
-
-        thicc = 5
-        size  = 40
-        # back
-        p1 = (meanX - thicc * 2, meanY - size - thicc * 2)
-        p2 = (meanX + thicc * 2, meanY + size + thicc * 2)
-        cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
-        p1 = (meanX - size - thicc * 2, meanY - thicc * 2)
-        p2 = (meanX + size + thicc * 2, meanY + thicc * 2)
-        cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
-
-        # fore
-        p1 = (meanX - thicc * 1, meanY - size - thicc * 1)
-        p2 = (meanX + thicc * 1, meanY + size + thicc * 1)
-        cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
-        p1 = (meanX - size - thicc * 1, meanY - thicc * 1)
-        p2 = (meanX + size + thicc * 1, meanY + thicc * 1)
-        cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
-
-        print('Mean: (%d, %d)' %(meanX, meanY))
-        cv2.imshow('output',cimg)
+    draw_circles(circles, cimg)
+    cv2.imshow('output',cimg)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
