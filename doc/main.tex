@@ -18,7 +18,7 @@
 % ---------------
 \name{Brandon Nguyen}
 \address{The University of Texas\\
-         Electrical and Computer Engineering}
+         EE 371R, Electrical and Computer Engineering}
 
 \begin{document}
 %\ninept
@@ -26,27 +26,41 @@
 \maketitle
 %
 \begin{abstract}
-The abstract should appear at the top of the left-hand column of text, about
-0.5 inch (12 mm) below the title area and no more than 3.125 inches (80 mm) in
-length.  Leave a 0.5 inch (12 mm) space between the end of the abstract and the
-beginning of the main text.  The abstract should contain about 100 to 150
-words, and should be identical to the abstract text submitted electronically
-along with the paper cover sheet.  All manuscripts must be in English, printed
-in black ink.
+It is shown that by utilizing techniques such as scaling, filtering, and the
+circle Hough transform that the points of impact on a target can be programatically located so that
+more precise and sophisticated methods can be used to quickly calculate accuracy and precision metrics.
 \end{abstract}
 %
 \begin{keywords}
-One, two, three, four, five
+Application, Circle Detection
 \end{keywords}
 %
-\section{Introduction}
-\label{sec:intro}
+\section{Background}
+\label{sec:background}
+A shooter requires feedback in the form of accuracy and precision metrics in order
+to make adjustments to their zero (affected by accuracy) and see what their level
+of performance is (precision).
 
-These guidelines include complete descriptions of the fonts, spacing, and
-related information for producing your proceedings manuscripts. Please follow
-them and if you have any questions, direct them to Conference Management
-Services, Inc.: Phone +1-979-846-6800 or email
-to \\\texttt{papers@icip13.org}.
+Accuracy is determined by the "mean point of impact", which is the average location
+of the population of points of impact. Shooters will typically visually estimate
+the main point of impact since it is often impractical to find the coordinates
+of each point of impact to perform the calculation.
+
+Precision is a metric which has several different methods to determine.
+The typical method used, due to its simplicity,  is "group size" where the distance
+between the two furthest points of impact is determined. Shooters will typically visually
+pick the two points and measure the distance using, if they have one, a ruler or
+informal tools such as their fingers.
+
+The two methods that shooters use above are inadequate for precisely determining
+accuracy and precision. Visual estimation of the mean point of impact and two 
+furthest points is imprecise and may lead to an inaccurate results. In addition,
+the "group size" method used by shooters does not take into account outliers ("fliers")
+which may result from an exceptional event such as a gust of wind or muscle spasm.
+
+As noted above, it is impractical to perform other, more computationally precise methods.
+Such methods require more time standing at a target which may inconvenience other shooters
+if the targets are manually placed or cut into the shooter's own time at the range.
 
 \section{Formatting your paper}
 \label{sec:format}
