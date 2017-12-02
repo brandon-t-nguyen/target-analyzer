@@ -24,13 +24,18 @@ def get_selection(image, p0, p1, scale):
     output = image[p0[1]:p1[1], p0[0]:p1[0]]
 
     roi_size = [p1[0] - p0[0], p1[1] - p0[1]]
-    new_size = [roi_size[0] * scale, roi_size[1] * scale]
+    new_size = [int(round(roi_size[0] * scale)), int(round(roi_size[1] * scale))]
+
+    print("ROI size:")
+    print(roi_size)
+    print("New size:")
+    print(new_size)
 
     # scale to a fixed size
     if np.prod(roi_size) > np.prod(new_size):
-        output = cv2.resize(output, (int(new_size[0]), int(new_size[1])), interpolation = cv2.INTER_AREA);
+        output = cv2.resize(output, (new_size[0], new_size[1]), interpolation = cv2.INTER_AREA);
     else:
-        output = cv2.resize(output, (int(new_size[0]), int(new_size[1])), interpolation = cv2.INTER_CUBIC);
+        output = cv2.resize(output, (new_size[0], new_size[1]), interpolation = cv2.INTER_CUBIC);
 
     return output
 
@@ -52,49 +57,48 @@ def preprocess(image):
     output = filter_preprocess(image)
     return output
 
-def draw_circles(circles, cimg):
-    meanX = 0
-    meanY = 0
-    n = 0
-    for i in circles:
-        n += 1
-        # draw the outer circle
-        cv2.circle(cimg,(i.x,i.y),i.r+5,(0,0,0),-2)
-        cv2.circle(cimg,(i.x,i.y),i.r,(0,255,0),-2)
+def draw_circle(c, cimg):
+    # draw the outer circle
+    cv2.circle(cimg,(c.x,c.y),c.r+5,(0,0,0),-2)
+    cv2.circle(cimg,(c.x,c.y),c.r,(0,255,0),-2)
 
-        # draw the center of the circle
-        cv2.circle(cimg,(i.x,i.y),2,(0,0,255),3)
+    # draw the center of the circle
+    cv2.circle(cimg,(c.x,c.y),2,(0,0,255),3)
 
-        cv2.imshow('output',cimg)
-        print('%d: (%d, %d)' %(n, i.x, i.y))
-
-        meanX += i.x
-        meanY += i.y
-
-    # draw the mean as a cross
-    if n > 0:
-        meanX = np.uint16(meanX/n)
-        meanY = np.uint16(meanY/n)
-
-        thicc = 5
-        size  = 40
+def draw_cross(x, y, thicc, size, cimg):
         # back
-        p1 = (meanX - thicc * 2, meanY - size - thicc * 2)
-        p2 = (meanX + thicc * 2, meanY + size + thicc * 2)
+        p1 = (x - thicc * 2, y - size - thicc * 2)
+        p2 = (x + thicc * 2, y + size + thicc * 2)
         cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
-        p1 = (meanX - size - thicc * 2, meanY - thicc * 2)
-        p2 = (meanX + size + thicc * 2, meanY + thicc * 2)
+        p1 = (x - size - thicc * 2, y - thicc * 2)
+        p2 = (x + size + thicc * 2, y + thicc * 2)
         cv2.rectangle(cimg, p1, p2, (0,0,0), -1)
 
         # fore
-        p1 = (meanX - thicc * 1, meanY - size - thicc * 1)
-        p2 = (meanX + thicc * 1, meanY + size + thicc * 1)
+        p1 = (x - thicc * 1, y - size - thicc * 1)
+        p2 = (x + thicc * 1, y + size + thicc * 1)
         cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
-        p1 = (meanX - size - thicc * 1, meanY - thicc * 1)
-        p2 = (meanX + size + thicc * 1, meanY + thicc * 1)
+        p1 = (x - size - thicc * 1, y - thicc * 1)
+        p2 = (x + size + thicc * 1, y + thicc * 1)
         cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
 
+def draw_circles(circles, cimg):
+    n = len(circles)
+    i = 0
+    for c in circles:
+        draw_circle(c, cimg)
+        print('%d: (%d, %d)' %(i, c.x, c.y))
+        i += 1
+
+    # draw the mean as a cross
+    if n > 0:
+        meanX = np.uint16(statistics.mean(c.x for c in circles))
+        meanY = np.uint16(statistics.mean(c.y for c in circles))
+
+        draw_cross(meanX, meanY, 5, 40, cimg)
+
         print('Mean: (%d, %d)' %(meanX, meanY))
+    cv2.imshow('output',cimg)
 
 def main():
     if len(sys.argv) > 1:
