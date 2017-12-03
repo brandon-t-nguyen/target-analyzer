@@ -11,6 +11,7 @@
 \def\L{{\cal L}}
 
 \newcommand{\unit}[1]{\ensuremath{\, \mathrm{#1}}}
+\graphicspath{ {./images/} }
 
 % Title.
 % ------
@@ -49,7 +50,7 @@ the main point of impact since it is often impractical to find the coordinates
 of each point of impact to perform the calculation.
 
 Precision is a metric which has several different methods to determine.
-The typical method used, due to its simplicity,  is "group size" where the distance
+The typical method used, due to its simplicity, is "group size" where the distance
 between the two furthest points of impact is determined. Shooters will typically visually
 pick the two points and measure the distance using, if they have one, a ruler or
 informal tools such as their fingers.
@@ -64,25 +65,36 @@ As noted above, it is impractical to perform other, more computationally precise
 Such methods require more time standing at a target which may inconvenience other shooters
 if the targets are manually placed or cut into the shooter's own time at the range.
 
-\section{Methods}
-\label{sec:format}
+\section{Tools and Materials}
+\label{sec:tools}
+OpenCV is a critical component of this project. OpenCV comes packaged with functions for
+applying a multitude of filters, as well as the circle Hough transform which internally uses a
+Canny edge dectector before running the accumulator.
 
+The Python bindings for OpenCV were used in order to quickly prototype the methods used.
+An Android application is also being developed for mobile devices.
+Due to potential marketability, the source of the Android application will not be available.
+However, the Python prototype is publically accessible.
+
+The image data was collected personally. The targets used were of the "reactive" type, which
+change color around where projectiles impact, NRA bullseye targets with a coarse stock, and
+zeroing targets with grids to aid in zeroing sights. The calibers tested were .22 LR,
+.223 Remington / 5.56x45 mm NATO, and 9x19 mm Parabellum.
+
+\section{Methods}
+\label{sec:methods}
 Inputs to the system are the image of a target (or region of interest of an image to reduce
 compute usage), a pixel to physical distance conversion for the image,
 and the projectile diameter (caliber). Though ideally only a picture would
 be required to locate the impact locations, knowledge of the conversion factor and projectile
 diameter nearly eliminates image scaling issues.
 
-OpenCV is a critical component of this project. OpenCV comes packaged with functions for
-applying a multitude of filters, as well as the circle Hough transform which internally uses a
-Canny edge dectector before running the accumulator.
-
 With the knowledge of projectile diameter and a conversion factor for pixel to physical distance,
 the image can be scaled so that impacts regardless of projectile diameter will be of the roughly
 the same pixel radius. This reduces the complexity of the preprocessing steps and circle Hough
 transform as now all circles will around the same size in pixels.
-Let \(C \unit{\frac{pixels}{distance\ units}}\) be the conversion factor, \(N \unit{pixels}\)
-be the normalized projectile radius in the image space, \(R \unit{distance\ units}\) be the 
+Let \(C\ \unit{\frac{pixels}{distance\ units}}\) be the conversion factor, \(N\ \unit{pixels}\)
+be the normalized projectile radius in the image space, \(R\ \unit{distance\ units}\) be the 
 actual radius of the projectile, \(S\) be the scaling factor for the image, \(D\) be 
 the dimensions of the original image, and \(\bar{D}\) be the dimensions of the scaled image.
 
@@ -101,6 +113,39 @@ to smooth out naturally occuring noise. Next, a median filter and bilateral filt
 to create larger patches of the same intensity to prevent small edges from causing false circles.
 
 % TODO
+\section{Results}
+\label{sec:results}
+
+\newcommand{\showsteps}[1] {
+    \begin{figure}[htb]
+    \begin{minipage}[b]{0.5\linewidth}
+      \centering
+      \centerline{\includegraphics[width=4.0cm]{out_1_#1}}
+      \centerline{(1) Selected region}\medskip
+    \end{minipage}%
+    \begin{minipage}[b]{0.5\linewidth}
+      \centering
+      \centerline{\includegraphics[width=4.0cm]{out_2_#1}}
+      \centerline{(2) Preprocessing performed}\medskip
+    \end{minipage}
+    
+    \begin{minipage}[b]{0.5\linewidth}
+      \centering
+      \centerline{\includegraphics[width=4.0cm]{out_3_#1}}
+      \centerline{(3) Canny edge map}\medskip
+    \end{minipage}%
+    \begin{minipage}[b]{0.5\linewidth}
+      \centering
+      \centerline{\includegraphics[width=4.0cm]{out_4_#1}}
+      \centerline{(4) Resulting circles}\medskip
+    \end{minipage}
+    \caption{State of target#1.jpg through the process}
+    \label{fig:res}
+    \end{figure}
+}
+
+\showsteps{0}
+\showsteps{1}
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
