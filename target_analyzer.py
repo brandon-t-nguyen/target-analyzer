@@ -82,7 +82,7 @@ def draw_cross(x, y, thicc, size, cimg):
         p2 = (x + size + thicc * 1, y + thicc * 1)
         cv2.rectangle(cimg, p1, p2, (0,0,255), -1)
 
-def draw_circles(circles, cimg):
+def draw_circles(circles, cimg, cross_size):
     n = len(circles)
     i = 0
     for c in circles:
@@ -95,7 +95,7 @@ def draw_circles(circles, cimg):
         meanX = np.uint16(statistics.mean(c.x for c in circles))
         meanY = np.uint16(statistics.mean(c.y for c in circles))
 
-        draw_cross(meanX, meanY, 5, 40, cimg)
+        draw_cross(meanX, meanY, int(round(cross_size/8)), cross_size, cimg)
 
         print('Mean: (%d, %d)' %(meanX, meanY))
     cv2.imshow('output',cimg)
@@ -103,6 +103,9 @@ def draw_circles(circles, cimg):
 def main():
     if len(sys.argv) > 1:
         image_path = sys.argv[1]
+        result_name = ""
+        if len(sys.argv) > 2:
+            result_name = "_" + sys.argv[2]
     else:
         print("Please provide an image file")
         exit(-1)
@@ -176,12 +179,24 @@ def main():
     circles = hough.runHough(pproc)
 
     # 7: Draw the results
+
+    # saving one that uses only the ROI
+    cimg_roi = cv2.cvtColor(sel, cv2.COLOR_GRAY2BGR)
+    draw_circles(circles, cimg_roi, 20)
+
     transform_circles(circles, S, off)
     cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    draw_circles(circles, cimg)
+    draw_circles(circles, cimg, 40)
     cv2.imshow("output", cimg)
 
     cv2.waitKey(0)
+
+    # 8: Save results
+    cv2.imwrite("out_1%s.png" % result_name, sel);
+    cv2.imwrite("out_2%s.png" % result_name, pproc);
+    cv2.imwrite("out_3%s.png" % result_name, edges);
+    cv2.imwrite("out_4%s.png" % result_name, cimg_roi);
+
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
