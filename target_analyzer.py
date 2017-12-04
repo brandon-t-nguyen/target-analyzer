@@ -80,7 +80,6 @@ class Analyzer:
         #hough.accum     = int(round(2 * math.pi * self.N * 0.75))
         #hough.accum     = int(round(2 * math.pi * self.N * 0.25))
         hough.accum     = int(round(self.N))
-        print("Hough accumulator threshold: %d" % hough.accum)
 
         self.edges     = hough.runCanny(self.pproc)
         self.holes_roi = hough.runHough(self.pproc)

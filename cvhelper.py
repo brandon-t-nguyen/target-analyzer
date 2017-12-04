@@ -12,11 +12,6 @@ def get_selection(image, p0, p1, scale):
     roi_size = [p1[0] - p0[0], p1[1] - p0[1]]
     new_size = [int(round(roi_size[0] * scale)), int(round(roi_size[1] * scale))]
 
-    print("ROI size:")
-    print(roi_size)
-    print("New size:")
-    print(new_size)
-
     # scale to a fixed size
     if np.prod(roi_size) > np.prod(new_size):
         output = cv2.resize(output, (new_size[0], new_size[1]), interpolation = cv2.INTER_AREA);
