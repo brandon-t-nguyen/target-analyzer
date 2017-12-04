@@ -83,6 +83,9 @@ zeroing targets with grids to aid in zeroing sights. The calibers tested were .2
 
 \section{Methods}
 \label{sec:methods}
+
+\subsection{Overview}
+\label{ssec:overview}
 Inputs to the system are the image of a target (or region of interest of an image to reduce
 compute usage), a pixel to physical distance conversion for the image,
 and the projectile diameter (caliber). Though ideally only a picture would
@@ -101,6 +104,7 @@ the dimensions of the original image, and \(\bar{D}\) be the dimensions of the s
 Thus:
 
 \[S = \frac{N}{R * C}\]
+
 \[\bar{D} = D * S\]
 
 The image is initially converted to grayscale as intensity data and not color data is required
@@ -112,7 +116,31 @@ ragged edges of the impacts are smoothed out. Next, a Gaussian kernel is applied
 to smooth out naturally occuring noise. Next, a median filter and bilateral filter are used in order
 to create larger patches of the same intensity to prevent small edges from causing false circles.
 
-% TODO
+The circle Hough transform is then performed, resulting in the circles and their radii being returned.
+
+\subsection{Implementation}
+\label{ssec:implementation}
+
+A Python prototype was created with an Android application in the works utilizing OpenCV.
+The Python prototype takes as an argument the path to an image file, prompts
+the user for the projectile diameter in inches (the United States shooting industry
+still revolves around Imperial units), and then prompts the user to draw a line
+on the original image as the pixel length to map to the real distance the user then inputs.
+At this point the necessary scaling factor is calculated.
+The user is then prompted to select a region of interest on the original target image.
+That subimage is then scaled, preprocessed, and has the circle Hough transform run on it.
+The circles returned have their coordinates and radii in the scaled image space, so a
+transformation step is performed to provide coordinates and radii in the dimensions of
+the original image. These circles are then drawn onto an output image, with the mean
+point of impact being calculated and depicted as a cross.
+
+The Android application allows users to take photos or use one from their gallery. Similarly,
+it prompts the user for projectile diameter, pixel-to-real-distance conversion factor, and
+a region of interest on the image. It is in the Android application where careful management
+of buffers is performed to keep the process performant on mobile devices:
+there is very little delay when performing the circle Hough transform even on
+images with high resolutions (e.g. 4608x3456).
+
 \section{Results}
 \label{sec:results}
 
@@ -146,6 +174,9 @@ to create larger patches of the same intensity to prevent small edges from causi
 
 \showsteps{0}
 \showsteps{1}
+\showsteps{3}
+\showsteps{8}
+\showsteps{23}
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
