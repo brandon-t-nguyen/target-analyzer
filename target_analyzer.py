@@ -3,6 +3,7 @@
 import sys
 import math
 import statistics
+import copy
 import numpy as np
 import cv2
 
@@ -41,14 +42,15 @@ class Analyzer:
         self.result= None
         self.output= None
 
-        self.circles= None
+        self.holes_roi = None
+        self.holes     = None
 
     def set_image(self, img):
         self.img = img
 
     def set_roi(self, roi_p1, roi_p2):
-        self.roi_p1 = roi_p1[:]
-        self.roi_p2 = roi_p2[:]
+        self.roi_p1 = copy.copy(roi_p1)
+        self.roi_p2 = copy.copy(roi_p2)
 
     def set_scale(self, norm_d, diameter, real_dis, scale_p1, scale_p2):
         self.N = norm_d
@@ -60,6 +62,7 @@ class Analyzer:
                                    math.pow(self.scale_p2[1] - self.scale_p1[1], 2)))
         self.C = line_dis / real_dis;
         self.S = self.N / (self.R * self.C)
+
 
     def run(self):
         self.sel = get_selection(self.img, self.roi_p1, self.roi_p2, self.S)
@@ -79,15 +82,17 @@ class Analyzer:
         hough.accum     = int(round(self.N))
         print("Hough accumulator threshold: %d" % hough.accum)
 
-        self.edges   = hough.runCanny(self.pproc)
-        self.circles = hough.runHough(self.pproc)
+        self.edges     = hough.runCanny(self.pproc)
+        self.holes_roi = hough.runHough(self.pproc)
+        self.holes = transform_circles(self.holes_roi, self.S, self.roi_p1)
 
+
+    def draw(self):
         self.result = cv2.cvtColor(self.sel, cv2.COLOR_GRAY2BGR)
-        draw_circles(self.circles, self.result, 20)
+        draw_circles(self.holes_roi, self.result, 20)
 
-        transform_circles(self.circles, self.S, self.roi_p1)
         self.output = cv2.cvtColor(self.img, cv2.COLOR_GRAY2BGR)
-        draw_circles(self.circles, self.output, 40)
+        draw_circles(self.holes, self.output, 40)
 
 def main():
     if len(sys.argv) > 1:
@@ -145,6 +150,7 @@ def main():
 
     # 5: Run
     analyzer.run()
+    analyzer.draw()
 
     cv2.imshow("roi"        , analyzer.sel)
     cv2.imshow("preprocess" , analyzer.pproc)

@@ -1,6 +1,7 @@
 import sys
 import math
 import statistics
+import copy
 import numpy as np
 import cv2
 from hole import Hole
@@ -25,10 +26,13 @@ def get_selection(image, p0, p1, scale):
     return output
 
 def transform_circles(circles, scale, offset):
-    for c in circles:
-        c.x = int(round(float(c.x) / scale + offset[0]))
-        c.y = int(round(float(c.y) / scale + offset[1]))
-        c.r = int(round(float(c.r) / scale))
+    holes = copy.deepcopy(circles)
+    for h in holes:
+        h.x = int(round(float(h.x) / scale + offset[0]))
+        h.y = int(round(float(h.y) / scale + offset[1]))
+        h.r = int(round(float(h.r) / scale))
+
+    return holes
 
 def filter_preprocess(image):
     output = image
