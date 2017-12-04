@@ -87,6 +87,3 @@ def draw_circles(circles, cimg, cross_size):
         draw_cross(meanX, meanY, int(round(cross_size/8)), cross_size, cimg)
 
         print('Mean: (%d, %d)' %(meanX, meanY))
-    cv2.imshow('output',cimg)
-
-
