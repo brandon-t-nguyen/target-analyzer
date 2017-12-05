@@ -11,8 +11,25 @@ import cv2
 from target_analyzer import Analyzer
 from hole import Hole
 
+class OverallStats:
+    def __init__(self, target_type = ""):
+        self.target_type    = target_type
+        self.total_pos  = 0
+        self.total_true_pos  = 0
+        self.total_false_neg = 0
+        self.total_false_pos = 0
+
+    def get_tpr(self):
+        return self.total_true_pos / self.total_pos
+    def get_fnr(self):
+        return self.total_false_neg / self.total_pos
+
 class Stats:
     def __init__(self):
+        self.id          = None
+        self.target_type = None
+        self.diameter    = None
+
         self.pos = []
         self.neg = []
         # successfully found
@@ -84,9 +101,11 @@ def main():
         reader = csv.DictReader(f)
 
         # run for each test
+        results = []
         n = 1
         for row in reader:
             path     = row["file"]
+            target_type = row["type"]
             diameter = float(row["diameter"])
             real_dis = float(row["scale"])
 
@@ -141,7 +160,43 @@ def main():
                 cv2.imshow("output"     , analyzer.output)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
+            stats.id    = n
+            stats.img   = None
+            stats.sel   = None
+            stats.pproc = None
+            stats.edges = None
+            stats.result= None
+            stats.output= None
+            stats.diameter = diameter
+            stats.target_type = target_type
+            results.append(stats)
         f.close()
+
+        # calculate the stats
+        reactive = OverallStats("reactive")
+        nra      = OverallStats("nra")
+        sighting = OverallStats("sighting")
+        overalls = [reactive, nra, sighting]
+        for result in results:
+            for overall in overalls:
+                if overall.target_type in result.target_type:
+                    dest = overall
+                    break
+            dest.total_pos += result.num_pos()
+            dest.total_true_pos  += result.num_true_pos()
+            dest.total_false_neg += result.num_false_neg()
+            dest.total_false_pos += result.num_false_pos()
+
+        for overall in overalls:
+            print(overall.target_type + "::")
+            print("---------------")
+            print("True positive rate: %0.3f, %d/%d"
+                    %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
+            print("False negative rate: %0.3f, %d/%d"
+                    %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
+            print("False positives: %d"
+                    %(overall.total_false_pos))
+            print("")
 
 if __name__ == "__main__":
     main()
