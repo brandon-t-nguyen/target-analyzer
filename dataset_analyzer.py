@@ -92,10 +92,13 @@ def get_coord(string_pair):
 def main():
     dataset_path = "./dataset.csv"
     show_mode = False
+    print_each = False
     if len(sys.argv) > 1:
         dataset_path = sys.argv[1]
-        if len(sys.argv) > 2 and sys.argv[2] == "--show":
-                show_mode = True
+        if "--show" in sys.argv:
+            show_mode = True
+        if "--print" in sys.argv:
+            print_each = True
 
     with open(dataset_path, "r") as f:
         reader = csv.DictReader(f)
@@ -137,11 +140,12 @@ def main():
             analyzer.run()
 
             stats = check_holes(check, analyzer.holes)
-            print("Testcase #%d" %(n))
-            print("True positive rate: %0.3f, %d/%d" %(stats.get_tpr(), stats.num_true_pos(), stats.num_pos()))
-            print("False negative rate: %0.3f, %d/%d" %(stats.get_fnr(), stats.num_false_neg(), stats.num_pos()))
-            print("False positives: %d" %(stats.num_false_pos()))
-            print("")
+            if print_each:
+                print("Testcase #%d" %(n))
+                print("True positive rate: %0.3f, %d/%d" %(stats.get_tpr(), stats.num_true_pos(), stats.num_pos()))
+                print("False negative rate: %0.3f, %d/%d" %(stats.get_fnr(), stats.num_false_neg(), stats.num_pos()))
+                print("False positives: %d" %(stats.num_false_pos()))
+                print("")
             n += 1
 
             if show_mode:
