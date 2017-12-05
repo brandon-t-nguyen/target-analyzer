@@ -111,7 +111,7 @@ def main():
                 check.append(coord_hole);
 
             analyzer = Analyzer()
-            img = cv2.imread("images/" + path, 0)
+            img = cv2.imread(path, 0)
             analyzer.set_image(img)
             analyzer.set_scale(20, diameter, real_dis, scale_p1, scale_p2)
             analyzer.set_roi(roi_p1, roi_p2)
