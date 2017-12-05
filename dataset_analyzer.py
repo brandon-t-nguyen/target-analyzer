@@ -23,6 +23,8 @@ class OverallStats:
         return self.total_true_pos / self.total_pos
     def get_fnr(self):
         return self.total_false_neg / self.total_pos
+    def get_fdr(self):
+        return self.total_false_pos / (self.total_true_pos + self.total_false_pos)
 
 class Stats:
     def __init__(self):
@@ -198,6 +200,9 @@ def main():
                     %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
             print("False negative rate: %0.3f, %d/%d"
                     %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
+            print("False discovery rate: %0.3f, %d/%d"
+                    %(overall.get_fdr(), overall.total_false_pos,
+                      overall.total_false_pos + overall.total_true_pos))
             print("False positives: %d"
                     %(overall.total_false_pos))
             print("")
