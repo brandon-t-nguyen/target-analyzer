@@ -59,6 +59,11 @@ class Stats:
     def get_fnr(self):
         return self.num_false_neg() / self.num_pos()
 
+    def get_fdr(self):
+        if self.num_true_pos() + self.num_false_pos() == 0:
+            return 0
+        return self.num_false_pos() / (self.num_true_pos() + self.num_false_pos())
+
 def check_holes(check, orig_holes):
     holes = copy.deepcopy(orig_holes)
 
@@ -144,9 +149,15 @@ def main():
             stats = check_holes(check, analyzer.holes)
             if print_each:
                 print("Testcase #%d" %(n))
-                print("True positive rate: %0.3f, %d/%d" %(stats.get_tpr(), stats.num_true_pos(), stats.num_pos()))
-                print("False negative rate: %0.3f, %d/%d" %(stats.get_fnr(), stats.num_false_neg(), stats.num_pos()))
-                print("False positives: %d" %(stats.num_false_pos()))
+                print("True positive rate: %0.3f, %d/%d"
+                        %(stats.get_tpr(), stats.num_true_pos(), stats.num_pos()))
+                print("False negative rate: %0.3f, %d/%d"
+                        %(stats.get_fnr(), stats.num_false_neg(), stats.num_pos()))
+                print("False discovery rate: %0.3f, %d/%d"
+                        %(stats.get_fdr(), stats.num_false_pos(),
+                          stats.num_true_pos() + stats.num_false_pos()))
+                print("False positives: %d"
+                        %(stats.num_false_pos()))
                 print("")
             n += 1
 
