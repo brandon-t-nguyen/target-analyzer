@@ -31,10 +31,10 @@ def transform_circles(circles, scale, offset):
 
 def filter_preprocess(image):
     output = image
-    output = cv2.blur(output, (7, 7))
-    output = cv2.GaussianBlur(output, (7, 7), 1, 1)
+    output = cv2.GaussianBlur(output, (3, 3), 1, 1)
+    output = cv2.blur(output, (3, 3))
+    output = cv2.bilateralFilter(output, 9, 3, 1)
     output = cv2.medianBlur(output, 7)
-    output = cv2.bilateralFilter(output, 7, 1, 3)
     return output
 
 def preprocess(image):
