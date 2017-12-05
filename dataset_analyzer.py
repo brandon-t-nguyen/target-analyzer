@@ -23,6 +23,8 @@ class OverallStats:
         return self.total_true_pos / self.total_pos
     def get_fnr(self):
         return self.total_false_neg / self.total_pos
+    def get_tdr(self):
+        return self.total_true_pos / (self.total_true_pos + self.total_false_pos)
     def get_fdr(self):
         return self.total_false_pos / (self.total_true_pos + self.total_false_pos)
 
@@ -64,8 +66,16 @@ class Stats:
             return 0
         return self.num_false_pos() / (self.num_true_pos() + self.num_false_pos())
 
+    def get_tdr(self):
+        if self.num_true_pos() + self.num_false_pos() == 0:
+            return 0
+        return self.num_true_pos() / (self.num_true_pos() + self.num_false_pos())
+
 def check_holes(check, orig_holes):
     holes = copy.deepcopy(orig_holes)
+    for h in holes:
+        # make the hole slightly bigger for leniency
+        h.r *= 1.25
 
     stats = Stats()
 
@@ -153,6 +163,9 @@ def main():
                         %(stats.get_tpr(), stats.num_true_pos(), stats.num_pos()))
                 print("False negative rate: %0.3f, %d/%d"
                         %(stats.get_fnr(), stats.num_false_neg(), stats.num_pos()))
+                print("True discovery rate: %0.3f, %d/%d"
+                        %(stats.get_tdr(), stats.num_true_pos(),
+                          stats.num_true_pos() + stats.num_false_pos()))
                 print("False discovery rate: %0.3f, %d/%d"
                         %(stats.get_fdr(), stats.num_false_pos(),
                           stats.num_true_pos() + stats.num_false_pos()))
@@ -211,6 +224,9 @@ def main():
                     %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
             print("False negative rate: %0.3f, %d/%d"
                     %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
+            print("True discovery rate: %0.3f, %d/%d"
+                    %(overall.get_tdr(), overall.total_false_pos,
+                      overall.total_true_pos + overall.total_true_pos))
             print("False discovery rate: %0.3f, %d/%d"
                     %(overall.get_fdr(), overall.total_false_pos,
                       overall.total_false_pos + overall.total_true_pos))
