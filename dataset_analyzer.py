@@ -225,14 +225,42 @@ def main():
             print("False negative rate: %0.3f, %d/%d"
                     %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
             print("True discovery rate: %0.3f, %d/%d"
-                    %(overall.get_tdr(), overall.total_false_pos,
-                      overall.total_true_pos + overall.total_true_pos))
+                    %(overall.get_tdr(), overall.total_true_pos,
+                      overall.total_false_pos + overall.total_true_pos))
             print("False discovery rate: %0.3f, %d/%d"
                     %(overall.get_fdr(), overall.total_false_pos,
                       overall.total_false_pos + overall.total_true_pos))
             print("False positives: %d"
                     %(overall.total_false_pos))
             print("")
+
+        # print out overall stats: evenly weighted
+        print("Unweighted average TPR: %0.3f" %(statistics.mean(o.get_tpr() for o in overalls)))
+        print("Unweighted average FNR: %0.3f" %(statistics.mean(o.get_fnr() for o in overalls)))
+        print("Unweighted average TDR: %0.3f" %(statistics.mean(o.get_tdr() for o in overalls)))
+        print("")
+
+        # print out unbiased stats: unweighted
+        overall = OverallStats()
+        overall.total_pos = sum(o.total_pos for o in overalls)
+        overall.total_true_pos = sum(o.total_true_pos for o in overalls)
+        overall.total_false_neg  = sum(o.total_false_neg for o in overalls)
+        overall.total_false_pos = sum(o.total_false_pos for o in overalls)
+
+        print("Weighted average TPR: %0.3f, %d/%d"
+                    %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
+        print("Weighted average FNR: %0.3f, %d/%d"
+                %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
+        print("Weighted average TDR: %0.3f, %d/%d"
+                %(overall.get_tdr(), overall.total_true_pos,
+                  overall.total_false_pos + overall.total_true_pos))
+        print("Weighted average FDR: %0.3f, %d/%d"
+                %(overall.get_fdr(), overall.total_false_pos,
+                  overall.total_false_pos + overall.total_true_pos))
+        print("Total False positives: %d"
+                %(overall.total_false_pos))
+
+
 
 if __name__ == "__main__":
     main()
