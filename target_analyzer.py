@@ -74,12 +74,12 @@ class Analyzer:
         hough = Hough()
         hough.dp        = 1.25
         hough.canny     = 70
-        hough.minDist   = int(round(self.N * 1.00))
+        hough.minDist   = int(round(self.N * 2.0))
         hough.minRadius = int(round(self.N * 0.75))
         hough.maxRadius = int(round(self.N * 1.25))
         #hough.accum     = int(round(2 * math.pi * self.N * 0.75))
         #hough.accum     = int(round(2 * math.pi * self.N * 0.25))
-        hough.accum     = int(round(self.N))
+        hough.accum     = int(round(self.N * 1.0))
 
         self.edges     = hough.runCanny(self.pproc)
         self.holes_roi = hough.runHough(self.pproc)

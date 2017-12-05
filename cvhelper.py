@@ -29,16 +29,70 @@ def transform_circles(circles, scale, offset):
 
     return holes
 
+def m_erode(image, kernel, iterations = 1):
+    return cv2.erode(image, kernel, iterations = iterations, borderType = cv2.BORDER_CONSTANT, borderValue = 0)
+
+def m_dilate(image, kernel, iterations = 1):
+    return cv2.dilate(image, kernel, iterations = iterations, borderType = cv2.BORDER_CONSTANT, borderValue = 0)
+
+def m_hitmiss(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_HITMISS, kernel, iterations = iterations)
+
+def m_top(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_TOPHAT, kernel, iterations = iterations)
+
+def m_black(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, kernel, iterations = iterations)
+
+def m_close(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel, iterations = iterations)
+
+def m_open(image, kernel, iterations = 1):
+    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations = iterations)
+
+def morph_preprocess(image):
+    output = image
+    output = cv2.GaussianBlur(output, (3, 3), 1, 1)
+    output = cv2.bilateralFilter(output, 3, 1, 1)
+
+    # 11
+    output = cv2.adaptiveThreshold(output,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 3, 2)
+
+    n = 3
+    k_rect = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
+    output = m_close(output, k_rect, n)
+
+    return output
+
+def sharpen(image):
+   kernel = np.array([
+                      [1,4,6,4,1],
+                      [4,16,24,16,4],
+                      [6, 24, -476, 25, 6],
+                      [4,16,24,16,4],
+                      [1,4,6,4,1]
+                     ])
+   kernel = np.multiply(kernel, -1/256)
+   output = cv2.filter2D(image, -1, kernel)
+   return output
+
 def filter_preprocess(image):
     output = image
     output = cv2.GaussianBlur(output, (3, 3), 1, 1)
-    output = cv2.blur(output, (3, 3))
+    output = cv2.blur(output, (5, 5))
     output = cv2.bilateralFilter(output, 9, 3, 1)
     output = cv2.medianBlur(output, 7)
+
+    # somehow this helps a lot
+    output = sharpen(output)
+    output = cv2.bilateralFilter(output, 9, 3, 1)
+    output = cv2.bilateralFilter(output, 9, 3, 1)
+    output = cv2.bilateralFilter(output, 9, 3, 1)
     return output
 
 def preprocess(image):
     output = filter_preprocess(image)
+    #output = morph_preprocess(image)
     return output
 
 def draw_circle(c, cimg):
