@@ -355,6 +355,13 @@ def run_search(dataset_path, num_iter):
             mutator.mutate(old_params)
             old_params = params
 
+            # every 100, find the max
+            if i % 25 == 0:
+                best = max(runs, key=lambda run:run.overall.get_f1())
+                runs = []
+                runs.append(best)
+                old_params = best.params
+
             print("iter %d" %i)
             f.seek(0)
             reader = csv.DictReader(f)
