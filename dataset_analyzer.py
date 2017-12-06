@@ -8,7 +8,7 @@ import copy
 import numpy as np
 import cv2
 
-from analyzer import Analyzer
+from analyzer import *
 from hole import Hole
 
 class OverallStats:
@@ -122,6 +122,43 @@ def get_coord(string_pair):
     pair = [int(coords_strings[0]), int(coords_strings[1])];
     return pair
 
+def run_test(row, params):
+    path     = row["file"]
+    target_type = row["type"]
+    diameter = float(row["diameter"])
+    real_dis = float(row["scale"])
+
+    scale_p = row["scale_p"]
+    scale_pairs = scale_p.split(",")
+    scale_p1 = get_coord(scale_pairs[0])
+    scale_p2 = get_coord(scale_pairs[1])
+
+    roi_p = row["roi_p"]
+    roi_pairs = roi_p.split(",")
+    roi_p1 = get_coord(roi_pairs[0])
+    roi_p2 = get_coord(roi_pairs[1])
+
+    holes_string = row["holes"]
+    holes_pairs  = holes_string.split(",")
+    check = []
+    for pair in holes_pairs:
+        coord = get_coord(pair)
+        coord_hole = Hole(coord[0], coord[1], 0)
+        check.append(coord_hole);
+
+    analyzer = Analyzer()
+    analyzer.params = params
+    img = cv2.imread(path, 0)
+    analyzer.set_image(img)
+    analyzer.set_scale(20, diameter, real_dis, scale_p1, scale_p2)
+    analyzer.set_roi(roi_p1, roi_p2)
+    analyzer.run()
+    stats = check_holes(check, analyzer.holes)
+
+    stats.diameter = diameter
+    stats.target_type = target_type
+    return stats
+
 def main():
     dataset_path = "./dataset.csv"
     show_mode = False
@@ -137,42 +174,11 @@ def main():
         reader = csv.DictReader(f)
 
         # run for each test
+        params = AnalyzerParams()
         results = []
         n = 1
         for row in reader:
-            path     = row["file"]
-            target_type = row["type"]
-            diameter = float(row["diameter"])
-            real_dis = float(row["scale"])
-
-            scale_p = row["scale_p"]
-            scale_pairs = scale_p.split(",")
-            scale_p1 = get_coord(scale_pairs[0])
-            scale_p2 = get_coord(scale_pairs[1])
-
-            roi_p = row["roi_p"]
-            roi_pairs = roi_p.split(",")
-            roi_p1 = get_coord(roi_pairs[0])
-            roi_p2 = get_coord(roi_pairs[1])
-
-            holes_string = row["holes"]
-            holes_pairs  = holes_string.split(",")
-            check = []
-            for pair in holes_pairs:
-                #coord_string = pair.split(" ")
-                #coord = Hole(int(coord_string[0]), int(coord_string[1]), 0)
-                coord = get_coord(pair)
-                coord_hole = Hole(coord[0], coord[1], 0)
-                check.append(coord_hole);
-
-            analyzer = Analyzer()
-            img = cv2.imread(path, 0)
-            analyzer.set_image(img)
-            analyzer.set_scale(20, diameter, real_dis, scale_p1, scale_p2)
-            analyzer.set_roi(roi_p1, roi_p2)
-            analyzer.run()
-
-            stats = check_holes(check, analyzer.holes)
+            stats = run_test(row, params)
             if print_each:
                 print("Testcase #%d" %(n))
                 print("True positive rate: %0.3f, %d/%d"
@@ -213,8 +219,6 @@ def main():
             stats.edges = None
             stats.result= None
             stats.output= None
-            stats.diameter = diameter
-            stats.target_type = target_type
             results.append(stats)
         f.close()
 
