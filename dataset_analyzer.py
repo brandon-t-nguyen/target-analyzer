@@ -258,62 +258,62 @@ class Mutator:
 
         direction = self.direction()
         if params.gauss_size == 1:
-            direction = 1
+            direction = 0
         params.gauss_size += self.gauss_size_d * direction
 
         direction = self.direction()
         if params.gauss_sigma == 0.1:
-            direction = 1
+            direction = 0
         params.gauss_sigma += self.gauss_sigma_d * direction
 
         direction = self.direction()
         if params.blur_size == 1:
-            direction = 1
+            direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
         if params.blur_size == 1:
-            direction = 1
+            direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
         if params.bilat_sigma1 == 0.1:
-            direction = 1
+            direction = 0
         params.bilat_sigma1 += self.bilat_sigma1_d * direction
 
         direction = self.direction()
         if params.bilat_sigma2 == 0.1:
-            direction = 1
+            direction = 0
         params.bilat_sigma2 += self.bilat_sigma2_d * direction
 
         direction = self.direction()
         if params.blur_size == 1:
-            direction = 1
+            direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
         if params.canny == 1:
-            direction = 1
+            direction = 0
         params.canny += self.canny_d * direction
 
         direction = self.direction()
         if params.minDistScale == 1.0:
-            direction = 1
+            direction = 0
         params.minDistScale += self.minDistS_d * direction
 
         direction = self.direction()
         if params.minRadScale == 0.25:
-            direction = 1
+            direction = 0
         params.minRadScale += self.minRadS_d * direction
 
         direction = self.direction()
         if params.maxRadScale == 1.00:
-            direction = 1
+            direction = 0
         params.maxRadScale += self.maxRadS_d * direction
 
         direction = self.direction()
         if params.accumScale == 0.01:
-            direction = 1
+            direction = 0
         params.accumScale += self.accumS_d * direction
 
 
