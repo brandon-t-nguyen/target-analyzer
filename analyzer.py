@@ -27,6 +27,21 @@ class AnalyzerParams:
         self.bilat_sigma2   = 1
         self.median_size    = 7
 
+    def print_out(self):
+        print("params.dp            = %f" %self.dp)
+        print("params.canny         = %f" %self.canny)
+        print("params.minDistScale  = %f" %self.minDistScale)
+        print("params.minRadScale   = %f" %self.minRadScale)
+        print("params.maxRadScale   = %f" %self.maxRadScale)
+        print("params.accumScale    = %f" %self.accumScale)
+        print("params.gauss_size    = %d" %self.gauss_size)
+        print("params.gauss_sigma   = %f" %self.gauss_sigma)
+        print("params.blur_size     = %d" %self.blur_size)
+        print("params.bilat_size    = %d" %self.bilat_size)
+        print("params.bilat_sigma1  = %f" %self.bilat_sigma1)
+        print("params.bilat_sigma2  = %f" %self.bilat_sigma2)
+        print("params.median_size   = %d" %self.median_size)
+
 class Analyzer:
     def __init__(self):
         self.R = -1

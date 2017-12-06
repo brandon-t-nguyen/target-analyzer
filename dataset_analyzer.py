@@ -5,6 +5,8 @@ import csv
 import math
 import statistics
 import copy
+import random
+from operator import attrgetter
 import numpy as np
 import cv2
 
@@ -20,8 +22,12 @@ class OverallStats:
         self.total_false_pos = 0
 
     def get_tpr(self):
+        if self.total_pos == 0:
+            return -1
         return self.total_true_pos / self.total_pos
     def get_fnr(self):
+        if self.total_pos == 0:
+            return -1
         return self.total_false_neg / self.total_pos
     def get_tdr(self):
         if self.total_true_pos + self.total_false_pos == 0:
@@ -35,8 +41,12 @@ class OverallStats:
     def get_precision(self):
         return self.get_tdr()
     def get_recall(self):
+        if self.total_true_pos + self.total_false_neg == 0:
+            return -1
         return self.total_true_pos / (self.total_true_pos + self.total_false_neg)
     def get_f1(self):
+        if self.get_precision() == 0 or self.get_recall() == 0:
+            return -1
         return 2 / ((1/self.get_precision()) + (1/self.get_recall()))
 
 class Stats:
@@ -157,28 +167,254 @@ def run_test(row, params):
 
     stats.diameter = diameter
     stats.target_type = target_type
-    return stats
+    return stats, analyzer
+
+def print_stats(overalls, overall):
+    for o in overalls:
+        print(o.target_type + "::")
+        print("---------------")
+        print("True positive rate (recall)     : %0.3f, %d/%d"
+                %(o.get_tpr(), o.total_true_pos, o.total_pos))
+        print("Pos predictive value (precision): %0.3f, %d/%d"
+                %(o.get_tdr(), o.total_true_pos,
+                  o.total_false_pos + o.total_true_pos))
+        print("False positives: %d"
+                %(o.total_false_pos))
+        print("F1 score: %0.3f"
+                %(o.get_f1()))
+        print("")
+
+    # print out overall stats: evenly weighted
+    print("Unweighted average TPR (recall)   : %0.3f" %(statistics.mean(o.get_tpr() for o in overalls)))
+    print("Unweighted average PPV (precision): %0.3f" %(statistics.mean(o.get_tdr() for o in overalls)))
+    print("Unweighted average F1 : %0.3f" %(statistics.mean(o.get_f1() for o in overalls)))
+    print("")
+
+    # print out unbiased stats: unweighted
+    print("Weighted average TPR (recall)   : %0.3f, %d/%d"
+                %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
+    print("Weighted average PPV (precision): %0.3f, %d/%d"
+            %(overall.get_tdr(), overall.total_true_pos,
+              overall.total_false_pos + overall.total_true_pos))
+    print("Weighted average F1 : %0.3f" %(overall.get_f1()))
+
+    print("False positives: %d" %(overall.total_false_pos))
+
+def calculate_overalls(results):
+    # calculate the stats
+    reactive = OverallStats("reactive")
+    nra      = OverallStats("nra")
+    sighting = OverallStats("sighting")
+    overalls = [reactive, nra, sighting]
+    for result in results:
+        for overall in overalls:
+            if overall.target_type in result.target_type:
+                dest = overall
+                break
+        dest.total_pos += result.num_pos()
+        dest.total_true_pos  += result.num_true_pos()
+        dest.total_false_neg += result.num_false_neg()
+        dest.total_false_pos += result.num_false_pos()
+    return overalls
+
+def calculate_overall(overalls):
+    overall = OverallStats()
+    overall.total_pos = sum(o.total_pos for o in overalls)
+    overall.total_true_pos = sum(o.total_true_pos for o in overalls)
+    overall.total_false_neg  = sum(o.total_false_neg for o in overalls)
+    overall.total_false_pos = sum(o.total_false_pos for o in overalls)
+    return overall
+
+class SearchRun:
+    def __init__(self, params, overall, overalls):
+        self.params  = copy.deepcopy(params)
+        self.overall = overall
+        self.overalls= overalls
+
+# random mutator
+class Mutator:
+    def __init__(self):
+        self.rng = random.Random()
+        self.gauss_size_d   = 2
+        self.gauss_sigma_d  = 0.1
+        self.blur_size_d    = 2
+        self.bilat_size_d   = 2
+        self.bilat_sigma1_d = 0.1
+        self.bilat_sigma2_d = 0.1
+        self.median_size_d  = 2
+
+        self.canny_d    = 1
+        self.minDistS_d = 0.005
+        self.minRadS_d  = 0.005
+        self.maxRadS_d  = 0.005
+        self.accumS_d   = 0.005
+    def set_seed(self, seed):
+        self.rng.seed(seed)
+    def direction(self):
+        direction = int(math.floor(self.rng.random() * 3)) - 1
+        return direction
+    def mutate(self, params):
+        num = math.floor(self.rng.random() * 12)
+
+        direction = self.direction()
+        if params.gauss_size == 1:
+            direction = 1
+        params.gauss_size += self.gauss_size_d * direction
+
+        direction = self.direction()
+        if params.gauss_sigma == 0.1:
+            direction = 1
+        params.gauss_sigma += self.gauss_sigma_d * direction
+
+        direction = self.direction()
+        if params.blur_size == 1:
+            direction = 1
+        params.blur_size += self.blur_size_d * direction
+
+        direction = self.direction()
+        if params.blur_size == 1:
+            direction = 1
+        params.blur_size += self.blur_size_d * direction
+
+        direction = self.direction()
+        if params.bilat_sigma1 == 0.1:
+            direction = 1
+        params.bilat_sigma1 += self.bilat_sigma1_d * direction
+
+        direction = self.direction()
+        if params.bilat_sigma2 == 0.1:
+            direction = 1
+        params.bilat_sigma2 += self.bilat_sigma2_d * direction
+
+        direction = self.direction()
+        if params.blur_size == 1:
+            direction = 1
+        params.blur_size += self.blur_size_d * direction
+
+        direction = self.direction()
+        if params.canny == 1:
+            direction = 1
+        params.canny += self.canny_d * direction
+
+        direction = self.direction()
+        if params.minDistScale == 1.0:
+            direction = 1
+        params.minDistScale += self.minDistS_d * direction
+
+        direction = self.direction()
+        if params.minRadScale == 0.25:
+            direction = 1
+        params.minRadScale += self.minRadS_d * direction
+
+        direction = self.direction()
+        if params.maxRadScale == 1.00:
+            direction = 1
+        params.maxRadScale += self.maxRadS_d * direction
+
+        direction = self.direction()
+        if params.accumScale == 0.01:
+            direction = 1
+        params.accumScale += self.accumS_d * direction
+
+
+# training algorithm
+def run_search(dataset_path, num_iter):
+    with open(dataset_path, "r") as f:
+        reader = csv.DictReader(f)
+        mutator = Mutator()
+        old_params = AnalyzerParams()
+        old_params.gauss_size     = 3
+        old_params.gauss_sigma    = 1
+        old_params.blur_size      = 5
+        old_params.bilat_size     = 9
+        old_params.bilat_sigma1   = 3
+        old_params.bilat_sigma2   = 1
+        old_params.median_size    = 7
+        runs = []
+        for i in range(0,num_iter):
+            # run for each test
+            results = []
+            n = 1
+            params = old_params
+            for row in reader:
+                stats, analyzer = run_test(row, params)
+                n += 1
+                stats.id    = n
+                stats.img   = None
+                stats.sel   = None
+                stats.pproc = None
+                stats.edges = None
+                stats.result= None
+                stats.output= None
+                results.append(stats)
+            overalls = calculate_overalls(results)
+            overall  = calculate_overall(overalls)
+            runs.append(SearchRun(params, overall, overalls))
+
+            # mutate the parameters
+            mutator.mutate(old_params)
+            old_params = params
+
+            print("iter %d" %i)
+            f.seek(0)
+            reader = csv.DictReader(f)
+    f.close()
+    print("")
+    max_run = max(runs, key=lambda run:run.overall.get_f1())
+    print_stats(max_run.overalls, max_run.overall)
+    print("")
+    max_run.params.print_out()
+    print("")
+
+    #for run in runs:
+    #    print_stats(run.overalls, run.overall)
+    #    print("")
+    #    run.params.print_out()
+    #    print("")
 
 def main():
     dataset_path = "./dataset.csv"
-    show_mode = False
+    show_mode  = False
     print_each = False
+    search    = False
     if len(sys.argv) > 1:
         dataset_path = sys.argv[1]
         if "--show" in sys.argv:
-            show_mode = True
+            show_mode  = True
         if "--print" in sys.argv:
             print_each = True
+        if "--search" in sys.argv:
+            search    = True
+            num_iter   = int(sys.argv[sys.argv.index("--search")+1])
+
+    if search:
+        run_search(dataset_path, num_iter)
+        exit(0)
 
     with open(dataset_path, "r") as f:
         reader = csv.DictReader(f)
 
         # run for each test
         params = AnalyzerParams()
+
+        params.dp            = 1.250000
+        params.canny         = 72.000000
+        params.minDistScale  = 2.015000
+        params.minRadScale   = 0.770000
+        params.maxRadScale   = 1.235000
+        params.accumScale    = 0.149155
+        params.gauss_size    = 5
+        params.gauss_sigma   = 1.300000
+        params.blur_size     = 7
+        params.bilat_size    = 9
+        params.bilat_sigma1  = 3.400000
+        params.bilat_sigma2  = 1.400000
+        params.median_size   = 7
+
         results = []
         n = 1
         for row in reader:
-            stats = run_test(row, params)
+            stats, analyzer = run_test(row, params)
             if print_each:
                 print("Testcase #%d" %(n))
                 print("True positive rate: %0.3f, %d/%d"
