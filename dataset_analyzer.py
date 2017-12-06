@@ -345,6 +345,13 @@ def run_search(dataset_path, beta, num, timed, batch):
         i = 0
         end = time.time() + num
         while (not timed and i < num) or (timed and time.time() < end):
+            # every batch of parameters, find the max and start from there
+            if (i + 1) % batch == 0:
+                best = max(runs, key=lambda run:run.overall.get_fb(beta))
+                runs = []
+                runs.append(best)
+                params = best.params
+
             # run for each test
             results = []
             n = 1
@@ -365,13 +372,6 @@ def run_search(dataset_path, beta, num, timed, batch):
 
             # mutate the parameters
             mutator.mutate(params)
-
-            # every set of parameters, find the max and start from there
-            if i % batch == 0:
-                best = max(runs, key=lambda run:run.overall.get_fb(beta))
-                runs = []
-                runs.append(best)
-                params = best.params
 
             print("iter %d" %i)
             i += 1
