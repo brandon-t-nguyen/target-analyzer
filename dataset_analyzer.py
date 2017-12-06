@@ -255,6 +255,7 @@ class Mutator:
         self.bilat_sigma2_d = 0.1
         self.median_size_d  = 2
 
+        self.dp_d       = 0.005
         self.canny_d    = 1
         self.minDistS_d = 0.005
         self.minRadS_d  = 0.005
@@ -300,6 +301,11 @@ class Mutator:
         if direction == -1 and params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
+
+        direction = self.direction()
+        if direction == -1 and params.dp <= 1.0:
+            direction = 0
+        params.dp += self.dp_d * direction
 
         direction = self.direction()
         if direction == -1 and params.canny <= 1:
