@@ -6,6 +6,7 @@ import math
 import statistics
 import copy
 import random
+import time
 from operator import attrgetter
 import numpy as np
 import cv2
@@ -48,6 +49,13 @@ class OverallStats:
         if self.get_precision() == 0 or self.get_recall() == 0:
             return -1
         return 2 / ((1/self.get_precision()) + (1/self.get_recall()))
+    def get_fb(self, b):
+        if self.get_precision() == 0 or self.get_recall() == 0:
+            return -1
+        b2 = b * b
+        pre = self.get_precision()
+        rec = self.get_recall()
+        return (1 + b2) * pre * rec / (b2 * pre + rec)
 
 class Stats:
     def __init__(self):
@@ -169,7 +177,7 @@ def run_test(row, params):
     stats.target_type = target_type
     return stats, analyzer
 
-def print_stats(overalls, overall):
+def print_stats(overalls, overall, beta):
     for o in overalls:
         print(o.target_type + "::")
         print("---------------")
@@ -182,12 +190,15 @@ def print_stats(overalls, overall):
                 %(o.total_false_pos))
         print("F1 score: %0.3f"
                 %(o.get_f1()))
+        print("F%0.3f score: %0.3f"
+                %(beta, o.get_fb(beta)))
         print("")
 
     # print out overall stats: evenly weighted
     print("Unweighted average TPR (recall)   : %0.3f" %(statistics.mean(o.get_tpr() for o in overalls)))
     print("Unweighted average PPV (precision): %0.3f" %(statistics.mean(o.get_tdr() for o in overalls)))
     print("Unweighted average F1 : %0.3f" %(statistics.mean(o.get_f1() for o in overalls)))
+    print("Unweighted average F%0.3f : %0.3f" %(beta, statistics.mean(o.get_fb(beta) for o in overalls)))
     print("")
 
     # print out unbiased stats: unweighted
@@ -197,6 +208,7 @@ def print_stats(overalls, overall):
             %(overall.get_tdr(), overall.total_true_pos,
               overall.total_false_pos + overall.total_true_pos))
     print("Weighted average F1 : %0.3f" %(overall.get_f1()))
+    print("Weighted average F%0.3f : %0.3f" %(beta, overall.get_fb(beta)))
 
     print("False positives: %d" %(overall.total_false_pos))
 
@@ -254,84 +266,85 @@ class Mutator:
         direction = int(math.floor(self.rng.random() * 3)) - 1
         return direction
     def mutate(self, params):
-        num = math.floor(self.rng.random() * 12)
-
         direction = self.direction()
-        if params.gauss_size == 1:
+        if params.gauss_size <= 1:
             direction = 0
         params.gauss_size += self.gauss_size_d * direction
 
         direction = self.direction()
-        if params.gauss_sigma == 0.1:
+        if params.gauss_sigma <= 0.1:
             direction = 0
         params.gauss_sigma += self.gauss_sigma_d * direction
 
         direction = self.direction()
-        if params.blur_size == 1:
+        if params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
-        if params.blur_size == 1:
+        if params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
-        if params.bilat_sigma1 == 0.1:
+        if params.bilat_sigma1 <= 0.1:
             direction = 0
         params.bilat_sigma1 += self.bilat_sigma1_d * direction
 
         direction = self.direction()
-        if params.bilat_sigma2 == 0.1:
+        if params.bilat_sigma2 <= 0.1:
             direction = 0
         params.bilat_sigma2 += self.bilat_sigma2_d * direction
 
         direction = self.direction()
-        if params.blur_size == 1:
+        if params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
-        if params.canny == 1:
+        if params.canny <= 1:
             direction = 0
         params.canny += self.canny_d * direction
 
         direction = self.direction()
-        if params.minDistScale == 1.0:
+        if params.minDistScale <= 1.0:
             direction = 0
         params.minDistScale += self.minDistS_d * direction
 
         direction = self.direction()
-        if params.minRadScale == 0.25:
+        if params.minRadScale <= 0.25:
             direction = 0
         params.minRadScale += self.minRadS_d * direction
 
         direction = self.direction()
-        if params.maxRadScale == 1.00:
+        if params.maxRadScale <= 1.00:
             direction = 0
         params.maxRadScale += self.maxRadS_d * direction
 
         direction = self.direction()
-        if params.accumScale == 0.01:
+        if params.accumScale <= 0.01:
             direction = 0
         params.accumScale += self.accumS_d * direction
 
 
-# training algorithm
-def run_search(dataset_path, num_iter):
+# parameter search algorithm
+def run_search(dataset_path, beta, num, timed):
     with open(dataset_path, "r") as f:
         reader = csv.DictReader(f)
         mutator = Mutator()
-        old_params = AnalyzerParams()
-        old_params.gauss_size     = 3
-        old_params.gauss_sigma    = 1
-        old_params.blur_size      = 5
-        old_params.bilat_size     = 9
-        old_params.bilat_sigma1   = 3
-        old_params.bilat_sigma2   = 1
-        old_params.median_size    = 7
+        params = AnalyzerParams()
+        params.gauss_size     = 3
+        params.gauss_sigma    = 1
+        params.blur_size      = 5
+        params.bilat_size     = 9
+        params.bilat_sigma1   = 3
+        params.bilat_sigma2   = 1
+        params.median_size    = 7
+        old_params = params
         runs = []
-        for i in range(0,num_iter):
+        i = 0
+        end = time.time() + num
+        while (not timed and i < num) or (timed and time.time() < end):
             # run for each test
             results = []
             n = 1
@@ -355,26 +368,27 @@ def run_search(dataset_path, num_iter):
             mutator.mutate(old_params)
             old_params = params
 
-            # every 100, find the max
+            # every set of parameters, find the max
             if i % 25 == 0:
-                best = max(runs, key=lambda run:run.overall.get_f1())
+                best = max(runs, key=lambda run:run.overall.get_fb(beta))
                 runs = []
                 runs.append(best)
                 old_params = best.params
 
             print("iter %d" %i)
+            i += 1
             f.seek(0)
             reader = csv.DictReader(f)
     f.close()
     print("")
-    max_run = max(runs, key=lambda run:run.overall.get_f1())
-    print_stats(max_run.overalls, max_run.overall)
+    max_run = max(runs, key=lambda run:run.overall.get_fb(beta))
+    print_stats(max_run.overalls, max_run.overall, beta)
     print("")
     max_run.params.print_out()
     print("")
 
     #for run in runs:
-    #    print_stats(run.overalls, run.overall)
+    #    print_stats(run.overalls, run.overall, beta)
     #    print("")
     #    run.params.print_out()
     #    print("")
@@ -392,10 +406,28 @@ def main():
             print_each = True
         if "--search" in sys.argv:
             search    = True
-            num_iter   = int(sys.argv[sys.argv.index("--search")+1])
+            timed     = False
+            num       = -1
+            beta = float(sys.argv[sys.argv.index("--search")+1])
+            num_string = sys.argv[sys.argv.index("--search")+2]
+            if num_string[-1] == 's':
+                num = float(num_string[:-1])
+                timed = True
+            elif num_string[-1] == 'm':
+                num = float(num_string[:-1]) * 60
+                timed = True
+            elif num_string[-1] == 'h':
+                num = float(num_string[:-1]) * 3600
+                timed = True
+            else:
+                num = int(num_string)
 
     if search:
-        run_search(dataset_path, num_iter)
+        if timed:
+            print("Running for %0.3f seconds" % num)
+        else:
+            print("Running for %d iterations" % num)
+        run_search(dataset_path, beta, num, timed)
         exit(0)
 
     with open(dataset_path, "r") as f:
