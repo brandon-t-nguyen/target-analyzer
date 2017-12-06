@@ -340,7 +340,7 @@ def run_search(dataset_path, beta, num, timed, batch):
         params.bilat_sigma1   = 3
         params.bilat_sigma2   = 1
         params.median_size    = 7
-        old_params = params
+
         runs = []
         i = 0
         end = time.time() + num
@@ -348,7 +348,6 @@ def run_search(dataset_path, beta, num, timed, batch):
             # run for each test
             results = []
             n = 1
-            params = old_params
             for row in reader:
                 stats, analyzer = run_test(row, params)
                 n += 1
@@ -365,15 +364,14 @@ def run_search(dataset_path, beta, num, timed, batch):
             runs.append(SearchRun(params, overall, overalls))
 
             # mutate the parameters
-            mutator.mutate(old_params)
-            old_params = params
+            mutator.mutate(params)
 
             # every set of parameters, find the max and start from there
             if i % batch == 0:
                 best = max(runs, key=lambda run:run.overall.get_fb(beta))
                 runs = []
                 runs.append(best)
-                old_params = best.params
+                params = best.params
 
             print("iter %d" %i)
             i += 1
