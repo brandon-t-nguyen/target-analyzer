@@ -346,7 +346,8 @@ def run_search(dataset_path, beta, num, timed, batch):
         end = time.time() + num
         while (not timed and i < num) or (timed and time.time() < end):
             # every batch of parameters, find the max and start from there
-            if (i + 1) % batch == 0:
+            i += 1
+            if i % batch == 0:
                 best = max(runs, key=lambda run:run.overall.get_fb(beta))
                 runs = []
                 runs.append(best)
@@ -374,7 +375,6 @@ def run_search(dataset_path, beta, num, timed, batch):
             mutator.mutate(params)
 
             print("iter %d" %i)
-            i += 1
             f.seek(0)
             reader = csv.DictReader(f)
     f.close()
