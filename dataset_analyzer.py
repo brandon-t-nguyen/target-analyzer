@@ -24,9 +24,20 @@ class OverallStats:
     def get_fnr(self):
         return self.total_false_neg / self.total_pos
     def get_tdr(self):
+        if self.total_true_pos + self.total_false_pos == 0:
+            return 0
         return self.total_true_pos / (self.total_true_pos + self.total_false_pos)
     def get_fdr(self):
+        if self.total_true_pos + self.total_false_pos == 0:
+            return 0
         return self.total_false_pos / (self.total_true_pos + self.total_false_pos)
+
+    def get_precision(self):
+        return self.get_tdr()
+    def get_recall(self):
+        return self.total_true_pos / (self.total_true_pos + self.total_false_neg)
+    def get_f1(self):
+        return 2 / ((1/self.get_precision()) + (1/self.get_recall()))
 
 class Stats:
     def __init__(self):
@@ -70,6 +81,11 @@ class Stats:
         if self.num_true_pos() + self.num_false_pos() == 0:
             return 0
         return self.num_true_pos() / (self.num_true_pos() + self.num_false_pos())
+
+    def get_precision(self):
+        return get_tdr(self)
+    def get_recall(self):
+        return self.num_true_pos() / (self.num_true_pos() + self.num_false_neg())
 
 def check_holes(check, orig_holes):
     holes = copy.deepcopy(orig_holes)
@@ -220,24 +236,21 @@ def main():
         for overall in overalls:
             print(overall.target_type + "::")
             print("---------------")
-            print("True positive rate: %0.3f, %d/%d"
+            print("True positive rate (recall)     : %0.3f, %d/%d"
                     %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
-            print("False negative rate: %0.3f, %d/%d"
-                    %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
-            print("True discovery rate: %0.3f, %d/%d"
+            print("Pos predictive value (precision): %0.3f, %d/%d"
                     %(overall.get_tdr(), overall.total_true_pos,
-                      overall.total_false_pos + overall.total_true_pos))
-            print("False discovery rate: %0.3f, %d/%d"
-                    %(overall.get_fdr(), overall.total_false_pos,
                       overall.total_false_pos + overall.total_true_pos))
             print("False positives: %d"
                     %(overall.total_false_pos))
+            print("F1 score: %0.3f"
+                    %(overall.get_f1()))
             print("")
 
         # print out overall stats: evenly weighted
-        print("Unweighted average TPR: %0.3f" %(statistics.mean(o.get_tpr() for o in overalls)))
-        print("Unweighted average FNR: %0.3f" %(statistics.mean(o.get_fnr() for o in overalls)))
-        print("Unweighted average TDR: %0.3f" %(statistics.mean(o.get_tdr() for o in overalls)))
+        print("Unweighted average TPR (recall)   : %0.3f" %(statistics.mean(o.get_tpr() for o in overalls)))
+        print("Unweighted average PPV (precision): %0.3f" %(statistics.mean(o.get_tdr() for o in overalls)))
+        print("Unweighted average F1 : %0.3f" %(statistics.mean(o.get_f1() for o in overalls)))
         print("")
 
         # print out unbiased stats: unweighted
@@ -247,18 +260,12 @@ def main():
         overall.total_false_neg  = sum(o.total_false_neg for o in overalls)
         overall.total_false_pos = sum(o.total_false_pos for o in overalls)
 
-        print("Weighted average TPR: %0.3f, %d/%d"
+        print("Weighted average TPR (recall)   : %0.3f, %d/%d"
                     %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
-        print("Weighted average FNR: %0.3f, %d/%d"
-                %(overall.get_fnr(), overall.total_false_neg, overall.total_pos))
-        print("Weighted average TDR: %0.3f, %d/%d"
+        print("Weighted average PPV (precision): %0.3f, %d/%d"
                 %(overall.get_tdr(), overall.total_true_pos,
                   overall.total_false_pos + overall.total_true_pos))
-        print("Weighted average FDR: %0.3f, %d/%d"
-                %(overall.get_fdr(), overall.total_false_pos,
-                  overall.total_false_pos + overall.total_true_pos))
-        print("Total False positives: %d"
-                %(overall.total_false_pos))
+        print("Weighted average F1 : %0.3f" %(overall.get_f1()))
 
 
 
