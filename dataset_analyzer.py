@@ -497,56 +497,9 @@ def main():
             results.append(stats)
         f.close()
 
-        # calculate the stats
-        reactive = OverallStats("reactive")
-        nra      = OverallStats("nra")
-        sighting = OverallStats("sighting")
-        overalls = [reactive, nra, sighting]
-        for result in results:
-            for overall in overalls:
-                if overall.target_type in result.target_type:
-                    dest = overall
-                    break
-            dest.total_pos += result.num_pos()
-            dest.total_true_pos  += result.num_true_pos()
-            dest.total_false_neg += result.num_false_neg()
-            dest.total_false_pos += result.num_false_pos()
-
-        for overall in overalls:
-            print(overall.target_type + "::")
-            print("---------------")
-            print("True positive rate (recall)     : %0.3f, %d/%d"
-                    %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
-            print("Pos predictive value (precision): %0.3f, %d/%d"
-                    %(overall.get_tdr(), overall.total_true_pos,
-                      overall.total_false_pos + overall.total_true_pos))
-            print("False positives: %d"
-                    %(overall.total_false_pos))
-            print("F1 score: %0.3f"
-                    %(overall.get_f1()))
-            print("")
-
-        # print out overall stats: evenly weighted
-        print("Unweighted average TPR (recall)   : %0.3f" %(statistics.mean(o.get_tpr() for o in overalls)))
-        print("Unweighted average PPV (precision): %0.3f" %(statistics.mean(o.get_tdr() for o in overalls)))
-        print("Unweighted average F1 : %0.3f" %(statistics.mean(o.get_f1() for o in overalls)))
-        print("")
-
-        # print out unbiased stats: unweighted
-        overall = OverallStats()
-        overall.total_pos = sum(o.total_pos for o in overalls)
-        overall.total_true_pos = sum(o.total_true_pos for o in overalls)
-        overall.total_false_neg  = sum(o.total_false_neg for o in overalls)
-        overall.total_false_pos = sum(o.total_false_pos for o in overalls)
-
-        print("Weighted average TPR (recall)   : %0.3f, %d/%d"
-                    %(overall.get_tpr(), overall.total_true_pos, overall.total_pos))
-        print("Weighted average PPV (precision): %0.3f, %d/%d"
-                %(overall.get_tdr(), overall.total_true_pos,
-                  overall.total_false_pos + overall.total_true_pos))
-        print("Weighted average F1 : %0.3f" %(overall.get_f1()))
-
-
+        overalls = calculate_overalls(results)
+        overall  = calculate_overall(overalls)
+        print_stats(overalls, overall, 0.5)
 
 if __name__ == "__main__":
     main()
