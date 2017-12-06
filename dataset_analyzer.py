@@ -267,68 +267,68 @@ class Mutator:
         return direction
     def mutate(self, params):
         direction = self.direction()
-        if params.gauss_size <= 1:
+        if direction == -1 and params.gauss_size <= 1:
             direction = 0
         params.gauss_size += self.gauss_size_d * direction
 
         direction = self.direction()
-        if params.gauss_sigma <= 0.1:
+        if direction == -1 and params.gauss_sigma <= 0.1:
             direction = 0
         params.gauss_sigma += self.gauss_sigma_d * direction
 
         direction = self.direction()
-        if params.blur_size <= 1:
+        if direction == -1 and params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
-        if params.blur_size <= 1:
+        if direction == -1 and params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
-        if params.bilat_sigma1 <= 0.1:
+        if direction == -1 and params.bilat_sigma1 <= 0.1:
             direction = 0
         params.bilat_sigma1 += self.bilat_sigma1_d * direction
 
         direction = self.direction()
-        if params.bilat_sigma2 <= 0.1:
+        if direction == -1 and params.bilat_sigma2 <= 0.1:
             direction = 0
         params.bilat_sigma2 += self.bilat_sigma2_d * direction
 
         direction = self.direction()
-        if params.blur_size <= 1:
+        if direction == -1 and params.blur_size <= 1:
             direction = 0
         params.blur_size += self.blur_size_d * direction
 
         direction = self.direction()
-        if params.canny <= 1:
+        if direction == -1 and params.canny <= 1:
             direction = 0
         params.canny += self.canny_d * direction
 
         direction = self.direction()
-        if params.minDistScale <= 1.0:
+        if direction == -1 and params.minDistScale <= 1.0:
             direction = 0
         params.minDistScale += self.minDistS_d * direction
 
         direction = self.direction()
-        if params.minRadScale <= 0.25:
+        if direction == -1 and params.minRadScale <= 0.25:
             direction = 0
         params.minRadScale += self.minRadS_d * direction
 
         direction = self.direction()
-        if params.maxRadScale <= 1.00:
+        if direction == -1 and params.maxRadScale <= 1.00:
             direction = 0
         params.maxRadScale += self.maxRadS_d * direction
 
         direction = self.direction()
-        if params.accumScale <= 0.01:
+        if direction == -1 and params.accumScale <= 0.01:
             direction = 0
         params.accumScale += self.accumS_d * direction
 
 
 # parameter search algorithm
-def run_search(dataset_path, beta, num, timed):
+def run_search(dataset_path, beta, num, timed, batch):
     with open(dataset_path, "r") as f:
         reader = csv.DictReader(f)
         mutator = Mutator()
@@ -368,8 +368,8 @@ def run_search(dataset_path, beta, num, timed):
             mutator.mutate(old_params)
             old_params = params
 
-            # every set of parameters, find the max
-            if i % 25 == 0:
+            # every set of parameters, find the max and start from there
+            if i % batch == 0:
                 best = max(runs, key=lambda run:run.overall.get_fb(beta))
                 runs = []
                 runs.append(best)
@@ -398,6 +398,7 @@ def main():
     show_mode  = False
     print_each = False
     search    = False
+    batch     = 50
     if len(sys.argv) > 1:
         dataset_path = sys.argv[1]
         if "--show" in sys.argv:
@@ -421,13 +422,15 @@ def main():
                 timed = True
             else:
                 num = int(num_string)
+        if "--batch" in sys.argv:
+            batch = int(sys.argv[sys.argv.index("--batch")+1])
 
     if search:
         if timed:
             print("Running for %0.3f seconds" % num)
         else:
             print("Running for %d iterations" % num)
-        run_search(dataset_path, beta, num, timed)
+        run_search(dataset_path, beta, num, timed, batch)
         exit(0)
 
     with open(dataset_path, "r") as f:
