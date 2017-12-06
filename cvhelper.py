@@ -5,6 +5,7 @@ import copy
 import numpy as np
 import cv2
 from hole import Hole
+from analyzer import *
 
 def get_selection(image, p0, p1, scale):
     output = image[p0[1]:p1[1], p0[0]:p1[0]]
@@ -50,7 +51,7 @@ def m_close(image, kernel, iterations = 1):
 def m_open(image, kernel, iterations = 1):
     return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations = iterations)
 
-def morph_preprocess(image):
+def morph_preprocess(image, p):
     output = image
     output = cv2.GaussianBlur(output, (3, 3), 1, 1)
     output = cv2.bilateralFilter(output, 3, 1, 1)
@@ -76,23 +77,22 @@ def sharpen(image):
    output = cv2.filter2D(image, -1, kernel)
    return output
 
-def filter_preprocess(image):
+def filter_preprocess(image, p):
     output = image
-    output = cv2.GaussianBlur(output, (3, 3), 1, 1)
-    output = cv2.blur(output, (5, 5))
-    output = cv2.bilateralFilter(output, 9, 3, 1)
-    output = cv2.medianBlur(output, 7)
+    output = cv2.GaussianBlur(output, (p.gauss_size, p.gauss_size), p.gauss_sigma, p.gauss_sigma)
+    output = cv2.blur(output, (p.blur_size, p.blur_size))
+    output = cv2.bilateralFilter(output, p.bilat_size, p.bilat_sigma1, p.bilat_sigma2)
+    output = cv2.medianBlur(output, p.median_size)
 
     # somehow this helps a lot
     output = sharpen(output)
-    output = cv2.bilateralFilter(output, 9, 3, 1)
-    output = cv2.bilateralFilter(output, 9, 3, 1)
-    output = cv2.bilateralFilter(output, 9, 3, 1)
+    output = cv2.bilateralFilter(output, p.bilat_size, p.bilat_sigma1, p.bilat_sigma2)
+    output = cv2.bilateralFilter(output, p.bilat_size, p.bilat_sigma1, p.bilat_sigma2)
+    output = cv2.bilateralFilter(output, p.bilat_size, p.bilat_sigma1, p.bilat_sigma2)
     return output
 
-def preprocess(image):
-    output = filter_preprocess(image)
-    #output = morph_preprocess(image)
+def preprocess(image, p):
+    output = filter_preprocess(image, p)
     return output
 
 def draw_circle(c, cimg):
@@ -125,7 +125,7 @@ def draw_circles(circles, cimg, cross_size):
     i = 0
     for c in circles:
         draw_circle(c, cimg)
-        print('%d: (%d, %d)' %(i, c.x, c.y))
+        #print('%d: (%d, %d)' %(i, c.x, c.y))
         i += 1
 
     # draw the mean as a cross
@@ -135,4 +135,4 @@ def draw_circles(circles, cimg, cross_size):
 
         draw_cross(meanX, meanY, int(round(cross_size/8)), cross_size, cimg)
 
-        print('Mean: (%d, %d)' %(meanX, meanY))
+        #print('Mean: (%d, %d)' %(meanX, meanY))

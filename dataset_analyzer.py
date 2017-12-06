@@ -8,7 +8,7 @@ import copy
 import numpy as np
 import cv2
 
-from target_analyzer import Analyzer
+from analyzer import Analyzer
 from hole import Hole
 
 class OverallStats:
