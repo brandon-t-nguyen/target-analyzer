@@ -350,7 +350,7 @@ def run_search(dataset_path, beta, num, timed, batch):
                 best = max(runs, key=lambda run:run.overall.get_fb(beta))
                 runs = []
                 runs.append(best)
-                params = best.params
+                params = copy.deepcopy(best.params)
 
             # run for each test
             results = []
