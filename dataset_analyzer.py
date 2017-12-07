@@ -443,18 +443,18 @@ def main():
         # run for each test
         params = AnalyzerParams()
 
-        params.dp            = 1.220000
-        params.canny         = 32.000000
-        params.minDistScale  = 1.965000
-        params.minRadScale   = 0.625000
-        params.maxRadScale   = 1.215000
-        params.accumScale    = 0.174155
-        params.gauss_size    = 19
-        params.gauss_sigma   = 1.400000
-        params.blur_size     = 7
+        params.dp            = 1.315000
+        params.canny         = 21.000000
+        params.minDistScale  = 1.990000
+        params.minRadScale   = 0.710000
+        params.maxRadScale   = 1.245000
+        params.accumScale    = 0.179155
+        params.gauss_size    = 9
+        params.gauss_sigma   = 1.900000
+        params.blur_size     = 5
         params.bilat_size    = 9
-        params.bilat_sigma1  = 2.900000
-        params.bilat_sigma2  = 3.800000
+        params.bilat_sigma1  = 2.400000
+        params.bilat_sigma2  = 5.000000
         params.median_size   = 7
 
         results = []
