@@ -129,14 +129,14 @@ An issue still remains for the choosing of the parameters to use for the filters
 the circle Hough transform. Initially, parameters were manually tweaked and manually checked against
 the images in the data-set.
 
-The F-score was chosen as a metric for performance. For this, true positives
+The \(F\)-score was chosen as a metric for performance. For this, true positives
 were defined as being able to successfully find an impact, false negatives were defined as
 being unsuccessful to find an impact, and false positives were defined as finding an impact
 where one doe snot exist.
-The parameters were searched for by repeated calculating the F-score for the parameters and then
+The parameters were searched for by repeated calculating the \(F\)-score for the parameters and then
 randomly adjusting their values in the positive, negative, or stationary directions by some
 delta value.
-At the end of the iterations, the parameters that resulted in the highest F-score was returned.
+At the end of the iterations, the parameters that resulted in the highest \(F\)-score was returned.
 
 The parameters were: the Hough transform resolution, the Canny edge detector upper threshold, the minimum
 distance scale, the minimum radius scale, the maximum radius scale, the accumulator scale, and the
@@ -171,14 +171,15 @@ images with high resolutions (e.g. 4608x3456).
 Besides these two applications, additional helper applications were created. One application
 was created to aid in creating a data-set, allowing users to click on a provided image
 to provide the scaling factors, the region of interest, and where the holes are, with the application
-printing out the data as a CSV entry. The other application was created to calculate the F-score
+printing out the data as a CSV entry. The other application was created to calculate the \(F\)-score
 metric as well as run the parameter searching algorithm.
 
 \section{Results}
 \label{sec:results}
 
 The data-set contains 33 targets from 18 different images. There were a total of 232 impacts
-to identify. As a performance metric, the \(F_{0.5}\)-score was used. The \(0.5\) was chosen
+to identify. Of the 33 targets, 26 were reactive, 3 were NRA, and 4 were sighting.
+As a performance metric, the \(F_{0.5}\)-score was used. The \(0.5\) was chosen
 since it penalizes for false positives more than it does for false negatives.
 For this application, false positives are seen as more harmful than false negatives, since users
 will be more confused about why random holes are being found as opposed to dismissing un-found
@@ -200,6 +201,8 @@ For reference:
 \[F_{\beta} = (1 + \beta{}^2) * \frac{precision * recall}{(\beta{}^2 * precision) + recall}\]
 \(F_{0.5}\) is the case when \(\beta = 0.5\).
 
+Values closer 1.0 are considered to be better.
+
 \begin{center}
     \begin{tabular}{ | l || l | l | l || l |}
     \hline
@@ -214,7 +217,7 @@ For reference:
 \label{ssec:images}
 
 \newcommand{\showsteps}[1] {
-    \begin{figure}[htb]
+    \begin{figure}[hp]
     \begin{minipage}[b]{0.5\linewidth}
       \centering
       \centerline{\includegraphics[width=4.0cm]{out_1_#1}}
@@ -243,12 +246,13 @@ For reference:
 
 A variety of different targets were tested. Reported here are some of the interesting targets.
 
-target0.jpg is the easiest target to analyze in the data-set. target0.jpg is a reactive type target,
+target0.jpg is the easiest target to analyze in the data-set. It is a reactive type target,
 where the colors around an impact will change from black to a bright color. This provides
 plenty of contrast from the black surroundings and the hole. In addition, the entire image
 focuses on just this one target.
 
-target1.jpg provided the case of many impacts on a single reactive target.
+target1.jpg provided the case of many impacts on a single reactive target. It also has
+instances of several impacts being very close to each other.
 
 target3.jpg is a NRA target, which has a dark center bulls-eye and concentric dark rings
 on the light portions. Impacts in the dark bulls-eye have much less contrast and thus are
@@ -265,6 +269,42 @@ as the small concentric circles can induce false positives.
 \showsteps{3}
 \showsteps{8}
 \showsteps{23}
+
+\section{Discussion}
+\label{sec:discussion}
+Due to the abundance of reactive targets in the data-set, the performance metrics follow
+performance on reactive targets more than they do for the NRA and sighting targets. Because of this,
+the parameter search was skewed towards success on reactive targets.
+If this were to be performed again, a more evenly distributed data set will be collected so that the
+parameters do not heavily favor one target type of the other.
+
+The reactive targets appear to have better scores than NRA and sighting target. This may be explainable
+by the high contrast provided the reactive targets when impacted, while the NRA target impacts blend
+into the dark bulls-eye and the sighting target has its impacts become ragged and unclear.
+
+An issue that this project did not cover is the effects of perspective: this project utilize images
+that were more or less face on with the target itself. However, being able to correct for different
+perspectives may be an approachable future goal.
+
+\section{Conclusion}
+\label{sec:conclusion}
+The application is able to determine the location of impacts relatively well on reactive targets.
+However, its performance becomes more finicky on the NRA and sighting targets. With more time
+to find optimal parameters or adding new parameters, a more satisfactory solution can be produced
+
+\section{Final Remarks}
+\label{sec:remarks}
+I learned a great deal over the course of this project. Initially, I thought that this project
+would have been fairly simple, as OpenCV already has a circle Hough transform implemented.
+However, it presented me the problem of finding parameters. After weeks of manually checking result
+and alternate approaches involving binarizing the image and performing morphological operations,
+I turned to letting the computer figure out what good sets of parameters would be. Not part of
+the Data Science sphere, I found out that I had actually implemented a form of random
+"hyperparameter tuning".
+
+With regards to technologies, I have learned how to leverage OpenCV and Numpy in Python, and I
+learned how to set up Android projects that make use of native code libraries that OpenCV
+releases for Android use.
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
