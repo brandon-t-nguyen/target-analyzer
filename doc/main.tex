@@ -69,16 +69,16 @@ if the targets are manually placed or cut into the shooter's own time at the ran
 \label{sec:tools}
 OpenCV is a critical component of this project. OpenCV comes packaged with functions for
 applying a multitude of filters, as well as the circle Hough transform which internally uses a
-Canny edge dectector before running the accumulator.
+Canny edge detector before running the accumulator.
 
 The Python bindings for OpenCV were used in order to quickly prototype the methods used.
 An Android application is also being developed for mobile devices.
 Due to potential marketability, the source of the Android application will not be available.
-However, the Python prototype is publically accessible.
+However, the Python prototype is publicly accessible.
 
 The image data was collected personally. The targets used were of the "reactive" type, which
-change color around where projectiles impact, NRA bullseye targets with a coarse stock, and
-zeroing targets with grids to aid in zeroing sights. The calibers tested were .22 LR,
+change color around where projectiles impact, NRA bulls-eye targets with a dark center coloration, and
+white zeroing targets with grids to aid in zeroing sights. The calibers tested were .22 LR,
 .223 Remington / 5.56x45 mm NATO, and 9x19 mm Parabellum.
 
 \section{Methods}
@@ -100,7 +100,6 @@ Let \(C\ \unit{\frac{pixels}{distance\ units}}\) be the conversion factor, \(N\ 
 be the normalized projectile radius in the image space, \(R\ \unit{distance\ units}\) be the 
 actual radius of the projectile, \(S\) be the scaling factor for the image, \(D\) be 
 the dimensions of the original image, and \(\bar{D}\) be the dimensions of the scaled image.
-
 Thus:
 
 \[S = \frac{N}{R * C}\]
@@ -111,12 +110,40 @@ The image is initially converted to grayscale as intensity data and not color da
 to pick out the structures of the impacts.
 Preprocessing steps involving filtering are performed on the image. These steps are done
 in context of the circle Hough transform being used to locate the impacts.
-First, an even blur kernel is applied to the image in order to soften edges. This is so that
-ragged edges of the impacts are smoothed out. Next, a Gaussian kernel is applied in order
-to smooth out naturally occuring noise. Next, a median filter and bilateral filter are used in order
-to create larger patches of the same intensity to prevent small edges from causing false circles.
+First a Gaussian kernel is applied in order to eliminate out naturally occurring Gaussian noise.
+Next, an even blur kernel is applied to the image in order to soften edges. This is so that
+ragged edges of the impacts are smoothed out.
+Next, a bilateral filter is used in order to amplify these smoothed out edges and provide 
+more smoothing over noise.
+Next, a median filter is used in order to create larger patches of the same intensity to 
+prevent small edges from causing false circles.
+Next, a sharpening filter is used to regain some edge definition.
+As a final heuristically chosen step, 3 bilateral filters of the same \(\sigma{}\)s are used.
+It was seen that this step helped reduced the number of false positives.
 
 The circle Hough transform is then performed, resulting in the circles and their radii being returned.
+
+\subsection{Parameters}
+\label{ssec:parameters}
+An issue still remains for the choosing of the parameters to use for the filters, their sizes, and
+the circle Hough transform. Initially, parameters were manually tweaked and manually checked against
+the images in the data-set.
+
+The F-score was chosen as a metric for performance. For this, true positives
+were defined as being able to successfully find an impact, false negatives were defined as
+being unsuccessful to find an impact, and false positives were defined as finding an impact
+where one doe snot exist.
+The parameters were searched for by repeated calculating the F-score for the parameters and then
+randomly adjusting their values in the positive, negative, or stationary directions by some
+delta value.
+At the end of the iterations, the parameters that resulted in the highest F-score was returned.
+
+The parameters were: the Hough transform resolution, the Canny edge detector upper threshold, the minimum
+distance scale, the minimum radius scale, the maximum radius scale, the accumulator scale, and the
+sizes and \(\sigma{}\)s (when relevant) of the Gaussian, blur, bilateral, and median filters.
+Note that for the "scale" parameters that by knowing what the diameters and radii of the circles
+are beforehand (as part of the scaling step), values these parameters are scaling are functions
+of the fixed pixel distance radius for all impacts.
 
 \subsection{Implementation}
 \label{ssec:implementation}
@@ -128,7 +155,7 @@ still revolves around Imperial units), and then prompts the user to draw a line
 on the original image as the pixel length to map to the real distance the user then inputs.
 At this point the necessary scaling factor is calculated.
 The user is then prompted to select a region of interest on the original target image.
-That subimage is then scaled, preprocessed, and has the circle Hough transform run on it.
+That sub-image is then scaled, preprocessed, and has the circle Hough transform run on it.
 The circles returned have their coordinates and radii in the scaled image space, so a
 transformation step is performed to provide coordinates and radii in the dimensions of
 the original image. These circles are then drawn onto an output image, with the mean
@@ -141,8 +168,50 @@ of buffers is performed to keep the process performant on mobile devices:
 there is very little delay when performing the circle Hough transform even on
 images with high resolutions (e.g. 4608x3456).
 
+Besides these two applications, additional helper applications were created. One application
+was created to aid in creating a data-set, allowing users to click on a provided image
+to provide the scaling factors, the region of interest, and where the holes are, with the application
+printing out the data as a CSV entry. The other application was created to calculate the F-score
+metric as well as run the parameter searching algorithm.
+
 \section{Results}
 \label{sec:results}
+
+The data-set contains 33 targets from 18 different images. There were a total of 232 impacts
+to identify. As a performance metric, the \(F_{0.5}\)-score was used. The \(0.5\) was chosen
+since it penalizes for false positives more than it does for false negatives.
+For this application, false positives are seen as more harmful than false negatives, since users
+will be more confused about why random holes are being found as opposed to dismissing un-found
+holes as the algorithm not working 100%.
+
+Data was taken on the recall/sensitivity/true positive rate (TPR), the precision/positive predictive value (PPV),
+and the \(F_{0.5}\)-score.
+
+For reference:
+
+\(tp\) = the number of true positives
+
+\(fp\) = the number of false positives
+
+\(fn\) = the number of false negatives
+
+\[recall = \frac{tp}{tp + fn}\]
+\[precision = \frac{tp}{tp + fp}\]
+\[F_{\beta} = (1 + \beta{}^2) * \frac{precision * recall}{(\beta{}^2 * precision) + recall}\]
+\(F_{0.5}\) is the case when \(\beta = 0.5\).
+
+\begin{center}
+    \begin{tabular}{ | l || l | l | l || l |}
+    \hline
+    Metric & Reactive & NRA & Sighting & Overall\\ \hline
+    Recall      & 0.834 & 0.564 & 0.733 & 0.776\\ \hline
+    Precision   & 0.986 & 0.846 & 0.957 & 0.963\\ \hline
+    \(F_{0.5}\) & 0.951 & 0.769 & 0.902 & 0.918\\ \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Images}
+\label{ssec:images}
 
 \newcommand{\showsteps}[1] {
     \begin{figure}[htb]
@@ -171,6 +240,25 @@ images with high resolutions (e.g. 4608x3456).
     \label{fig:res}
     \end{figure}
 }
+
+A variety of different targets were tested. Reported here are some of the interesting targets.
+
+target0.jpg is the easiest target to analyze in the data-set. target0.jpg is a reactive type target,
+where the colors around an impact will change from black to a bright color. This provides
+plenty of contrast from the black surroundings and the hole. In addition, the entire image
+focuses on just this one target.
+
+target1.jpg provided the case of many impacts on a single reactive target.
+
+target3.jpg is a NRA target, which has a dark center bulls-eye and concentric dark rings
+on the light portions. Impacts in the dark bulls-eye have much less contrast and thus are
+more difficult to pick out.
+
+target8.jpg is a sighting target. Due to the thinner material of these targets compared
+to the NRA and reactive targets, the holes have a different, more ragged shape.
+
+target23.jpg is a small reactive target. The small reactive targets pose an issue
+as the small concentric circles can induce false positives.
 
 \showsteps{0}
 \showsteps{1}
