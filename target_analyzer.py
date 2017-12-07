@@ -9,7 +9,7 @@ import cv2
 
 from hole import Hole
 from hough import Hough
-from analyzer import Analyzer
+from analyzer import *
 from cvhelper import *
 
 p0 = [-1, -1]
@@ -47,8 +47,24 @@ def main():
 
     cv2.setMouseCallback("original", scale_callback)
 
+    params = AnalyzerParams()
+    params.dp            = 1.220000
+    params.canny         = 32.000000
+    params.minDistScale  = 1.965000
+    params.minRadScale   = 0.625000
+    params.maxRadScale   = 1.215000
+    params.accumScale    = 0.174155
+    params.gauss_size    = 19
+    params.gauss_sigma   = 1.400000
+    params.blur_size     = 7
+    params.bilat_size    = 9
+    params.bilat_sigma1  = 2.900000
+    params.bilat_sigma2  = 3.800000
+    params.median_size   = 7
+
     analyzer = Analyzer()
     analyzer.set_image(img)
+    analyzer.params = params
 
     # 1: Get the bullet diameter from user
     D = float(input("Input bullet diameter (in):: "))
