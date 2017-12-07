@@ -18,4 +18,7 @@ clean:
 view:$(PDF)
 	okular $(PDF)
 
-.PHONY: clean view
+spell:
+	aspell -t -c $(DOC).tex
+
+.PHONY: clean view spell
