@@ -4,7 +4,6 @@
 % --------------------------------------------------------------------------
 \documentclass{article}
 \usepackage{spconf,amsmath,graphicx}
-
 % Example definitions.
 % --------------------
 \def\x{{\mathbf x}}
@@ -29,9 +28,19 @@
 \maketitle
 %
 \begin{abstract}
-It is shown that by utilizing techniques such as scaling, filtering, and the
+In the shooting sports, metrics such as accuracy and precision are used to gauge performance.
+However, there is little mathematical precision behind the methods often used, which usually
+use estimations with body parts or target featues such as line markings to calculate
+the metrics.
+
+By utilizing techniques such as scaling, filtering, and the
 circle Hough transform that the points of impact on a target can be programatically located so that
 more precise and sophisticated methods can be used to quickly calculate accuracy and precision metrics.
+
+Hyperparameter tuning can then be performed in order to find better parameters for the
+filters and circle Hough transform to improve the recall and precision of the predictions.
+At the time of this report's writing, the recall had reached 0.776 and the precision had
+reached 0.963.
 \end{abstract}
 %
 \begin{keywords}
@@ -183,18 +192,20 @@ As a performance metric, the \(F_{0.5}\)-score was used. The \(0.5\) was chosen
 since it penalizes for false positives more than it does for false negatives.
 For this application, false positives are seen as more harmful than false negatives, since users
 will be more confused about why random holes are being found as opposed to dismissing un-found
-holes as the algorithm not working 100%.
+holes as the algorithm not working 100\% correctly.
 
 Data was taken on the recall/sensitivity/true positive rate (TPR), the precision/positive predictive value (PPV),
 and the \(F_{0.5}\)-score.
 
 For reference:
 
+\begin{center}
 \(tp\) = the number of true positives
 
 \(fp\) = the number of false positives
 
 \(fn\) = the number of false negatives
+\end{center}
 
 \[recall = \frac{tp}{tp + fn}\]
 \[precision = \frac{tp}{tp + fp}\]
@@ -207,9 +218,9 @@ Values closer 1.0 are considered to be better.
     \begin{tabular}{ | l || l | l | l || l |}
     \hline
     Metric & Reactive & NRA & Sighting & Overall\\ \hline
-    Recall      & 0.834 & 0.564 & 0.733 & 0.776\\ \hline
-    Precision   & 0.986 & 0.846 & 0.957 & 0.963\\ \hline
-    \(F_{0.5}\) & 0.951 & 0.769 & 0.902 & 0.918\\ \hline
+    Recall      & 0.859 & 0.590 & 0.767 & 0.802\\ \hline
+    Precision   & 0.972 & 0.958 & 0.958 & 0.969\\ \hline
+    \(F_{0.5}\) & 0.947 & 0.852 & 0.913 & 0.930\\ \hline
     \end{tabular}
 \end{center}
 
@@ -217,7 +228,7 @@ Values closer 1.0 are considered to be better.
 \label{ssec:images}
 
 \newcommand{\showsteps}[1] {
-    \begin{figure}[hp]
+    \begin{figure}[!htpb]
     \begin{minipage}[b]{0.5\linewidth}
       \centering
       \centerline{\includegraphics[width=4.0cm]{out_1_#1}}
@@ -296,8 +307,9 @@ to find optimal parameters or adding new parameters, a more satisfactory solutio
 \label{sec:remarks}
 I learned a great deal over the course of this project. Initially, I thought that this project
 would have been fairly simple, as OpenCV already has a circle Hough transform implemented.
-However, it presented me the problem of finding parameters. After weeks of manually checking result
-and alternate approaches involving binarizing the image and performing morphological operations,
+However, it presented me the problem of preprocessing and finding parameters.
+After weeks of manually checking results and alternate approaches involving 
+binarizing the image and performing morphological operations,
 I turned to letting the computer figure out what good sets of parameters would be. Not part of
 the Data Science sphere, I found out that I had actually implemented a form of random
 "hyperparameter tuning".
