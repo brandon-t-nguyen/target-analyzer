@@ -30,7 +30,7 @@ def main():
         if len(sys.argv) > 2:
             result_name = "_" + sys.argv[2]
     else:
-        print("Please provide an image file")
+        print("target_analyzer.py <image file>")
         exit(-1)
 
     # Create window with freedom of dimensions

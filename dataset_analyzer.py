@@ -397,6 +397,11 @@ def run_search(dataset_path, beta, num, timed, batch):
     #    run.params.print_out()
     #    print("")
 
+def print_help():
+    print("target_analyzer.py <dataset CSV file> [--show] [--print]")
+    print("--show: Show the images in the data set")
+    print("--print: Print the per-target stats")
+
 def main():
     dataset_path = "./dataset.csv"
     show_mode  = False
@@ -428,6 +433,9 @@ def main():
                 num = int(num_string)
         if "--batch" in sys.argv:
             batch = int(sys.argv[sys.argv.index("--batch")+1])
+    else:
+        print_help()
+        exit(-1)
 
     if search:
         if timed:
